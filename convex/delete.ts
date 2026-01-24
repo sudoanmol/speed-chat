@@ -4,7 +4,6 @@ import { UIMessageWithMetadata } from '../lib/types'
 import { internal } from './_generated/api'
 import { Id } from './_generated/dataModel'
 import { internalMutation } from './_generated/server'
-import { authComponent, createAuth } from './auth'
 import { authedMutation } from './utils'
 
 export const deleteMessages = authedMutation({
@@ -110,8 +109,6 @@ export const deleteAllChats = authedMutation({
 
 export const deleteAccount = authedMutation({
   handler: async (ctx) => {
-    const { auth, headers } = await authComponent.getAuth(createAuth, ctx)
-
     // Delete all user data
     const userChats = await getManyFrom(ctx.db, 'chats', 'by_user_id', ctx.userId, 'userId')
 
@@ -132,9 +129,6 @@ export const deleteAccount = authedMutation({
       await ctx.db.delete(chat._id)
     }
 
-    await auth.api.deleteUser({
-      body: {},
-      headers,
-    })
+    // TODO: Delete user from database
   },
 })

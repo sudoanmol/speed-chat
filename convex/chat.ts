@@ -77,7 +77,7 @@ export const generateChatTitle = authedAction({
     const response = await generateText({
       model: openrouter('google/gemini-2.5-flash'),
       system: titleGenPrompt,
-      messages: convertToModelMessages([args.userMessage as UIMessageWithMetadata]),
+      messages: await convertToModelMessages([args.userMessage as UIMessageWithMetadata]),
     })
 
     if (response.text) {
@@ -93,7 +93,7 @@ export const generateChatTitle = authedAction({
 export const updateChatTitle = internalMutation({
   args: {
     chatId: v.string(),
-    userId: v.string(),
+    userId: v.id('users'),
     title: v.string(),
   },
   handler: async (ctx, args) => {

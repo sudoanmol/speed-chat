@@ -10,9 +10,7 @@ const nextConfig: NextConfig = {
     ],
   },
   devIndicators: false,
-  experimental: {
-    turbopackFileSystemCacheForDev: true,
-  },
+  reactCompiler: true,
 }
 
 export default nextConfig

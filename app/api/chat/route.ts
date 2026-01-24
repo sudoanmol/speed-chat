@@ -1,9 +1,9 @@
 import { api } from '@/convex/_generated/api'
 import { chatSystemPrompt } from '@/lib/ai/prompts'
-import { getToken } from '@/lib/auth/token'
 import { getErrorMessage } from '@/lib/error'
 import { getStreamContext } from '@/lib/stream-context'
 import { ChatRequestSchema, MessageMetadata } from '@/lib/types'
+import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { webSearch } from '@exalabs/ai-sdk'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { convertToModelMessages, createIdGenerator, smoothStream, stepCountIs, streamText } from 'ai'
@@ -11,7 +11,7 @@ import { fetchAction, fetchMutation } from 'convex/nextjs'
 import { nanoid } from 'nanoid'
 
 export async function POST(request: Request) {
-  const token = await getToken()
+  const token = await convexAuthNextjsToken()
 
   if (!token) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
         extraBody: reasoningConfig,
       }),
       system: chatSystemPrompt(model.name),
-      messages: convertToModelMessages(messages),
+      messages: await convertToModelMessages(messages),
       experimental_transform: smoothStream({
         chunking: 'word',
       }),

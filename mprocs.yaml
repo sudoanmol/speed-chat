@@ -1,0 +1,7 @@
+procs:
+  next:
+    cmd: ['bun', 'dev:next']
+    cwd: .
+  convex:
+    cmd: ['pnpm', 'dev:convex']
+    cwd: .

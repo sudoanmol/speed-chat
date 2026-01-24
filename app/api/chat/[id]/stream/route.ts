@@ -1,12 +1,12 @@
 import { api } from '@/convex/_generated/api'
-import { getToken } from '@/lib/auth/token'
 import { getStreamContext } from '@/lib/stream-context'
+import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { UI_MESSAGE_STREAM_HEADERS } from 'ai'
 import { fetchQuery } from 'convex/nextjs'
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const token = await getToken()
+  const token = await convexAuthNextjsToken()
 
   if (!token) {
     return new Response('Unauthorized', { status: 401 })

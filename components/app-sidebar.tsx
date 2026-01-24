@@ -13,11 +13,11 @@ import {
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
 import { api } from '@/convex/_generated/api'
-import { authClient } from '@/lib/auth/client'
 import { getErrorMessage } from '@/lib/error'
 import { useQueryWithStatus } from '@/lib/utils'
+import { useAuthActions } from '@convex-dev/auth/react'
 import { VariantProps } from 'class-variance-authority'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { Key, LogIn, LogOut, MessageSquare, Monitor, Moon, PenBox, Search, Sun, Trash, UserX } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
@@ -46,7 +46,9 @@ import {
 import { Kbd, KbdGroup } from './ui/kbd'
 
 export function AppSidebar() {
-  const { data: session, isPending: isUserLoading } = authClient.useSession()
+  const user = useQuery(api.users.getCurrentUser)
+  const isUserLoading = user === undefined
+  const { signOut } = useAuthActions()
   const router = useRouter()
   const { chatId } = useChatConfig()
   const { setOpenSearchDialog, setOpenApiKeyDialog } = useDialogs()
@@ -62,7 +64,7 @@ export function AppSidebar() {
     isSuccess,
     isPending,
     isError,
-  } = useQueryWithStatus(api.chat.getAllChats, session ? {} : 'skip')
+  } = useQueryWithStatus(api.chat.getAllChats, user ? {} : 'skip')
 
   const deleteAllChats = useMutation(api.delete.deleteAllChats)
   const deleteAccount = useMutation(api.delete.deleteAccount)
@@ -96,7 +98,7 @@ export function AppSidebar() {
       <Sidebar variant="inset">
         <SidebarHeader className="flex flex-col items-center">
           <Link className="flex items-center gap-2" href="/">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-300">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400">
               <MessageSquare className="size-4.5 text-white" />
             </div>
             <span className="text-lg font-medium">SpeedChat</span>
@@ -138,8 +140,10 @@ export function AppSidebar() {
 
         <SidebarContent>
           <SidebarGroup className="flex flex-1 flex-col">
-            {!session && !isUserLoading ? (
-              <div className="text-muted-foreground mx-auto my-auto flex text-sm">Please login to view your chats.</div>
+            {!user && !isUserLoading ? (
+              <div className="text-muted-foreground mx-auto my-auto flex text-sm">
+                Please sign in to view your chats.
+              </div>
             ) : isPending || (isSuccess && chats?.length === 0) ? null : (
               <>
                 {pinnedChats && pinnedChats.length > 0 && (
@@ -170,28 +174,22 @@ export function AppSidebar() {
         <SidebarFooter>
           {isUserLoading ? (
             <SidebarMenuSkeleton showIcon={true} />
-          ) : session ? (
+          ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   className="flex h-12 w-full items-center justify-start gap-3 rounded-lg px-2 pb-0"
                   variant="ghost"
                 >
-                  <Image
-                    src={session.user.image ?? ''}
-                    alt={session.user.name ?? ''}
-                    width={30}
-                    height={30}
-                    className="rounded-full"
-                  />
-                  <span className="truncate text-sm font-normal">{session.user.name}</span>
+                  <Image src={user.image ?? ''} alt={user.name ?? ''} width={30} height={30} className="rounded-full" />
+                  <span className="truncate text-sm font-normal">{user.name}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm leading-none font-medium">{session.user.name}</p>
-                    <p className="text-muted-foreground text-xs leading-none">{session.user.email}</p>
+                    <p className="text-sm leading-none font-medium">{user.name}</p>
+                    <p className="text-muted-foreground text-xs leading-none">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -224,16 +222,12 @@ export function AppSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
-                    await authClient.signOut({
-                      fetchOptions: {
-                        onSuccess: () => {
-                          router.push('/')
-                        },
-                        onError: ({ error }) => {
-                          toast.error(error.message)
-                        },
-                      },
-                    })
+                    try {
+                      await signOut()
+                      router.push('/')
+                    } catch (error) {
+                      toast.error(getErrorMessage(error))
+                    }
                   }}
                 >
                   <LogOut />
@@ -317,15 +311,12 @@ export function LoginButton({
   variant: VariantProps<typeof buttonVariants>['variant']
   size: VariantProps<typeof buttonVariants>['size']
 }) {
+  const { signIn } = useAuthActions()
+
   return (
     <Button
       className={className}
-      onClick={async () =>
-        await authClient.signIn.social({
-          provider: 'google',
-          callbackURL: window.location.href,
-        })
-      }
+      onClick={() => void signIn('google', { redirectTo: window.location.href })}
       size={size}
       variant={variant}
     >

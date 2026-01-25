@@ -1,8 +1,11 @@
-- migrate to new ai elements components??
-- block file uploads for models that dont support it
-- add branch chat to user message too - with model picker like in below but it creates a new chat and starts the message from there
-- add retry message model picker like t3 chat to rety same or retry with different model
-- stream tokens into convex db
-- effect + redis stream resume
-- add image generation
-- add opencode background agents
+- [x] migrate to new ai elements components??
+- [ ] block file uploads for models that dont support it
+- [ ] add branch chat to user message too - with model picker like in below but it creates a new chat and starts the message from there
+- [ ] add retry message model picker like t3 chat to rety same or retry with different model
+- [ ] stream tokens into convex db
+- [ ] effect + redis stream resume
+- [ ] add image generation
+- [ ] add opencode background agents
+- [ ] add daytona code execution sandbox integration
+
+save metadata in convex http route

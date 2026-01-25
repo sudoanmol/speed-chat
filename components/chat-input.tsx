@@ -6,7 +6,7 @@ import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { useChatContext } from '@/lib/stores/chat-store'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from 'convex/react'
-import { ArrowUp, ChevronDown, Paperclip } from 'lucide-react'
+import { ArrowUp, ChevronDown, Paperclip, Square } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { MemoizedFilePreview } from './file-preview'
@@ -191,7 +191,7 @@ export function ChatInput({
             size="icon-sm"
             type="submit"
           >
-            <ArrowUp className="size-5" />
+            {isStreaming ? <Square className="size-4" /> : <ArrowUp className="size-4" />}
             <span className="sr-only">Send message</span>
           </Button>
         </div>

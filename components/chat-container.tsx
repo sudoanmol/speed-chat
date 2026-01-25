@@ -86,7 +86,7 @@ function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
         </div>
       ) : (
         <StickToBottom className="relative min-h-0 flex-1" resize="instant" initial="instant">
-          <StickToBottom.Content className="flex flex-col px-4 pb-32 md:px-0">
+          <StickToBottom.Content className="flex w-full flex-col px-4 pb-32 md:px-0">
             {isLoadingMessages ? null : <Messages />}
           </StickToBottom.Content>
           <ScrollToBottom />
@@ -114,13 +114,12 @@ function ScrollToBottom() {
     !isAtBottom && (
       <div className="absolute bottom-34 left-1/2 -translate-x-1/2">
         <Button
-          size="sm"
+          size="icon-sm"
           variant="outline"
           onClick={() => scrollToBottom()}
           className="bg-background! rounded-full shadow-md"
         >
           <ArrowDown className="size-4" />
-          Scroll to bottom
         </Button>
       </div>
     )

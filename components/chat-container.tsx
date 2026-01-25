@@ -77,20 +77,30 @@ function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
       {noActiveChat ? (
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-6 px-4 md:px-0">
           <h1 className="text-2xl md:text-3xl">How can I help you today?</h1>
-          <ChatInput isDragActive={isDragActive} droppedFiles={droppedFiles} setDroppedFiles={setDroppedFiles} />
+          <ChatInput
+            isDragActive={isDragActive}
+            droppedFiles={droppedFiles}
+            setDroppedFiles={setDroppedFiles}
+            noActiveChat={noActiveChat}
+          />
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <StickToBottom className="relative min-h-0 flex-1" resize="instant" initial="instant">
-            <StickToBottom.Content className="flex flex-col px-4 md:px-0">
-              {isLoadingMessages ? null : <Messages />}
-            </StickToBottom.Content>
-            <ScrollToBottom />
-          </StickToBottom>
-          <div className="shrink-0 px-2 pb-2">
-            <ChatInput isDragActive={isDragActive} droppedFiles={droppedFiles} setDroppedFiles={setDroppedFiles} />
+        <StickToBottom className="relative min-h-0 flex-1" resize="instant" initial="instant">
+          <StickToBottom.Content className="flex flex-col px-4 pb-32 md:px-0">
+            {isLoadingMessages ? null : <Messages />}
+          </StickToBottom.Content>
+          <ScrollToBottom />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 px-2">
+            <div className="pointer-events-auto">
+              <ChatInput
+                isDragActive={isDragActive}
+                droppedFiles={droppedFiles}
+                setDroppedFiles={setDroppedFiles}
+                noActiveChat={noActiveChat}
+              />
+            </div>
           </div>
-        </div>
+        </StickToBottom>
       )}
       <SearchDialog open={openSearchDialog} onOpenChange={setOpenSearchDialog} />
     </div>
@@ -102,14 +112,15 @@ function ScrollToBottom() {
 
   return (
     !isAtBottom && (
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-34 left-1/2 -translate-x-1/2">
         <Button
-          size="icon-sm"
+          size="sm"
           variant="outline"
           onClick={() => scrollToBottom()}
           className="bg-background! rounded-full shadow-md"
         >
           <ArrowDown className="size-4" />
+          Scroll to bottom
         </Button>
       </div>
     )

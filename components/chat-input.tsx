@@ -28,10 +28,12 @@ export function ChatInput({
   isDragActive,
   droppedFiles,
   setDroppedFiles,
+  noActiveChat,
 }: {
   isDragActive: boolean
   droppedFiles: File[]
   setDroppedFiles: React.Dispatch<React.SetStateAction<File[]>>
+  noActiveChat: boolean
 }) {
   const { isAuthenticated } = useConvexAuth()
   const {
@@ -86,8 +88,9 @@ export function ChatInput({
   return (
     <form
       className={cn(
-        'border-border bg-muted/30 dark:bg-input/20 mx-auto w-full max-w-3xl rounded-xl border p-2 px-2 shadow-xs transition-colors',
-        isDragActive && 'border-primary'
+        'border-border bg-background mx-auto w-full max-w-3xl border p-2 px-2 shadow-xs transition-colors',
+        isDragActive && 'border-primary',
+        noActiveChat ? 'rounded-xl' : 'rounded-t-xl'
       )}
       onSubmit={(e) => {
         e.preventDefault()
@@ -105,7 +108,7 @@ export function ChatInput({
       )}
       <Textarea
         autoFocus
-        className="placeholder:text-muted-foreground max-h-30 min-h-15 w-full resize-none border-0 bg-transparent! px-1 text-[15px]! shadow-none focus-visible:ring-0"
+        className="placeholder:text-muted-foreground max-h-60 min-h-15 w-full resize-none border-0 bg-transparent! px-1 text-[15px]! shadow-none focus-visible:ring-0"
         onChange={handleInputChange}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {

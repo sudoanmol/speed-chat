@@ -82,8 +82,8 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sidebar variant="inset">
-        <SidebarHeader className="flex flex-col items-center">
+      <Sidebar>
+        <SidebarHeader className="flex flex-col items-center pt-4">
           <Link className="flex items-center gap-2" href="/">
             <div className="flex size-8 items-center justify-center rounded-lg bg-purple-400">
               <MessageSquare className="size-4.5 text-white" />
@@ -158,7 +158,7 @@ export function AppSidebar() {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter className="pb-4">
           {isUserLoading ? (
             <SidebarMenuSkeleton showIcon={true} />
           ) : user ? (

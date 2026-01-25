@@ -27,7 +27,7 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="bg-transparent backdrop-blur-sm">
           <ThemeIcon />
           <span className="sr-only">Toggle theme</span>
         </Button>

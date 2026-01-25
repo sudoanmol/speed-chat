@@ -1,6 +1,5 @@
 import { getManyFrom, getOneFrom } from 'convex-helpers/server/relationships'
 import { ConvexError, v } from 'convex/values'
-import { nanoid } from 'nanoid'
 import { authedMutation } from './utils'
 
 export const branchOffFromMessage = authedMutation({
@@ -9,7 +8,7 @@ export const branchOffFromMessage = authedMutation({
     messageId: v.string(),
   },
   handler: async (ctx, args) => {
-    const branchChatId = nanoid()
+    const branchChatId = crypto.randomUUID()
 
     const parentChat = await getOneFrom(ctx.db, 'chats', 'by_chat_id', args.parentChatId, 'id')
 

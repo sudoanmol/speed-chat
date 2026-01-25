@@ -13,19 +13,19 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { api } from '@/convex/_generated/api'
 import type { Chat } from '@/convex/chat'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { getErrorMessage } from '@/lib/error'
+import { getErrorMessage } from '@/lib/convex-error'
 import { useMutation } from 'convex/react'
 import { GitBranch, Link2, Link2Off, Loader2, MoreHorizontal, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
-import { toast } from 'react-hot-toast'
-import { useChatConfig } from './providers/chat-config-provider'
+import { toast } from 'sonner'
+import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 
 export function SidebarChatItem({ chat }: { chat: Chat }) {
   const isMobile = useIsMobile()
   const router = useRouter()
-  const { chatId: currentChatId } = useChatConfig()
+  const currentChatId = useChatConfigStore((s) => s.chatId)
   const [isRenamingChat, setIsRenamingChat] = useState(false)
   const [renamingChatId, setRenamingChatId] = useState<string | null>(null)
   const [newChatTitle, setNewChatTitle] = useState('')
@@ -105,7 +105,7 @@ export function SidebarChatItem({ chat }: { chat: Chat }) {
           </Link>
         )}
       </SidebarMenuButton>
-      {chat.activeStreamId ? (
+      {false ? (
         <SidebarMenuAction className="top-2!">
           <Loader2 className="size-4 animate-spin" />
           <span className="sr-only">Loading</span>

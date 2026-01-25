@@ -13,21 +13,20 @@ import {
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
 import { api } from '@/convex/_generated/api'
-import { getErrorMessage } from '@/lib/error'
+import { getErrorMessage } from '@/lib/convex-error'
 import { useQueryWithStatus } from '@/lib/utils'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { VariantProps } from 'class-variance-authority'
-import { useMutation, useQuery } from 'convex/react'
-import { Key, LogIn, LogOut, MessageSquare, Monitor, Moon, PenBox, Search, Sun, Trash, UserX } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useQuery } from 'convex/react'
+import { LogIn, LogOut, MessageSquare, PenBox, Search, Settings } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'react-hot-toast'
-import { ConfirmationDialog } from './confirmation-dialog'
-import { useChatConfig } from './providers/chat-config-provider'
-import { useDialogs } from './providers/dialogs-provider'
+import { toast } from 'sonner'
+import { useChatConfigStore } from '@/lib/stores/chat-config-store'
+import { SearchDialog } from './search-dialog'
+import { SettingsDialog } from './settings-dialog'
 import { SidebarChatItem } from './sidebar-chat-item'
 import { Button, buttonVariants } from './ui/button'
 import {
@@ -35,12 +34,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { Kbd, KbdGroup } from './ui/kbd'
@@ -50,13 +44,9 @@ export function AppSidebar() {
   const isUserLoading = user === undefined
   const { signOut } = useAuthActions()
   const router = useRouter()
-  const { chatId } = useChatConfig()
-  const { setOpenSearchDialog, setOpenApiKeyDialog } = useDialogs()
-  const { theme, setTheme } = useTheme()
-  const [openDeleteAllChatsDialog, setOpenDeleteAllChatsDialog] = useState(false)
-  const [isDeleteAllChatsLoading, setIsDeleteAllChatsLoading] = useState(false)
-  const [openDeleteAccountDialog, setOpenDeleteAccountDialog] = useState(false)
-  const [isDeleteAccountLoading, setIsDeleteAccountLoading] = useState(false)
+  const chatId = useChatConfigStore((s) => s.chatId)
+  const [openSearchDialog, setOpenSearchDialog] = useState(false)
+  const [openSettingsDialog, setOpenSettingsDialog] = useState(false)
 
   const {
     data: chats,
@@ -65,9 +55,6 @@ export function AppSidebar() {
     isPending,
     isError,
   } = useQueryWithStatus(api.chat.getAllChats, user ? {} : 'skip')
-
-  const deleteAllChats = useMutation(api.delete.deleteAllChats)
-  const deleteAccount = useMutation(api.delete.deleteAccount)
 
   useEffect(() => {
     if (isError) {
@@ -193,32 +180,9 @@ export function AppSidebar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Sun className="absolute size-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                    <Moon className="absolute size-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-                    <span className="ml-6">Toggle theme</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                      <DropdownMenuRadioItem value="light">
-                        <Sun />
-                        Light
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="dark">
-                        <Moon />
-                        Dark
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="system">
-                        <Monitor />
-                        System
-                      </DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuItem onClick={() => setOpenApiKeyDialog(true)}>
-                  <Key />
-                  Configure API Key
+                <DropdownMenuItem onClick={() => setOpenSettingsDialog(true)}>
+                  <Settings />
+                  Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
@@ -233,15 +197,6 @@ export function AppSidebar() {
                   <LogOut />
                   Log out
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => setOpenDeleteAllChatsDialog(true)}>
-                  <Trash />
-                  Delete all chats
-                </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onClick={() => setOpenDeleteAccountDialog(true)}>
-                  <UserX />
-                  Delete account
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -250,54 +205,8 @@ export function AppSidebar() {
         </SidebarFooter>
       </Sidebar>
 
-      <ConfirmationDialog
-        open={openDeleteAllChatsDialog}
-        onOpenChange={(open) => {
-          setOpenDeleteAllChatsDialog(open)
-        }}
-        onConfirm={async () => {
-          try {
-            setIsDeleteAllChatsLoading(true)
-            await deleteAllChats()
-            toast.success('All chats deleted successfully')
-            setOpenDeleteAllChatsDialog(false)
-            router.push('/')
-          } catch (error) {
-            toast.error(getErrorMessage(error))
-          } finally {
-            setIsDeleteAllChatsLoading(false)
-          }
-        }}
-        title="Delete All Chats"
-        description="Are you sure you want to delete all your chats? This action cannot be undone."
-        confirmText="Delete All Chats"
-        isLoading={isDeleteAllChatsLoading}
-      />
-
-      <ConfirmationDialog
-        open={openDeleteAccountDialog}
-        onOpenChange={(open) => {
-          setOpenDeleteAccountDialog(open)
-        }}
-        onConfirm={async () => {
-          try {
-            setIsDeleteAccountLoading(true)
-            await deleteAccount()
-            toast.success('Account deleted successfully')
-            setOpenDeleteAccountDialog(false)
-            router.push('/')
-            router.refresh()
-          } catch (error) {
-            toast.error(getErrorMessage(error))
-          } finally {
-            setIsDeleteAccountLoading(false)
-          }
-        }}
-        title="Delete Account"
-        description="Are you sure you want to delete your account? This will permanently delete all your chats and data. This action cannot be undone."
-        confirmText="Delete Account"
-        isLoading={isDeleteAccountLoading}
-      />
+      <SearchDialog open={openSearchDialog} onOpenChange={setOpenSearchDialog} />
+      <SettingsDialog open={openSettingsDialog} onOpenChange={setOpenSettingsDialog} />
     </>
   )
 }

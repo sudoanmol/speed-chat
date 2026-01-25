@@ -13,11 +13,11 @@ import { Input } from '@/components/ui/input'
 import { api } from '@/convex/_generated/api'
 import { Chat } from '@/convex/chat'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { getErrorMessage } from '@/lib/error'
+import { getErrorMessage } from '@/lib/convex-error'
 import { useMutation } from 'convex/react'
 import { Check, Copy, Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 type ShareChatDialogProps = {
   open: boolean

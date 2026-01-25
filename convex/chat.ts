@@ -3,11 +3,11 @@ import { convertToModelMessages, generateText } from 'ai'
 import { getManyFrom, getOneFrom } from 'convex-helpers/server/relationships'
 import { FunctionReturnType } from 'convex/server'
 import { ConvexError, v } from 'convex/values'
-import { titleGenPrompt } from '../lib/ai/prompts'
 import type { UIMessageWithMetadata } from '../lib/types'
 import { api, internal } from './_generated/api'
-import { internalMutation, query } from './_generated/server'
-import { authedAction, authedMutation, authedQuery } from './utils'
+import { internalAction, internalMutation, query } from './_generated/server'
+import { titleGenPrompt } from './prompts'
+import { authedMutation, authedQuery } from './utils'
 
 export const getAllChats = authedQuery({
   handler: async (ctx) => {
@@ -45,14 +45,15 @@ export const getChatMessages = authedQuery({
   },
 })
 
-export const createChat = authedMutation({
+export const createChat = internalMutation({
   args: {
     chatId: v.string(),
+    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert('chats', {
       id: args.chatId,
-      userId: ctx.userId,
+      userId: args.userId,
       title: 'New Chat',
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -63,11 +64,12 @@ export const createChat = authedMutation({
   },
 })
 
-export const generateChatTitle = authedAction({
+export const generateChatTitle = internalAction({
   args: {
     chatId: v.string(),
     apiKey: v.string(),
     userMessage: v.any(),
+    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     const openrouter = createOpenRouter({
@@ -82,7 +84,7 @@ export const generateChatTitle = authedAction({
 
     if (response.text) {
       await ctx.runMutation(internal.chat.updateChatTitle, {
-        userId: ctx.userId,
+        userId: args.userId,
         chatId: args.chatId,
         title: response.text,
       })
@@ -110,17 +112,18 @@ export const updateChatTitle = internalMutation({
   },
 })
 
-export const upsertMessage = authedMutation({
+export const upsertMessage = internalMutation({
   args: {
     chatId: v.string(),
     message: v.any(),
+    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     const message = args.message as UIMessageWithMetadata
 
     const chat = await ctx.db
       .query('chats')
-      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', ctx.userId))
+      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', args.userId))
       .first()
 
     if (!chat) {
@@ -144,63 +147,7 @@ export const upsertMessage = authedMutation({
 
     await ctx.db.patch(chat._id, {
       updatedAt: Date.now(),
-      activeStreamId: undefined,
     })
-  },
-})
-
-export const getChatActiveStreamId = authedQuery({
-  args: {
-    chatId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const chat = await ctx.db
-      .query('chats')
-      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', ctx.userId))
-      .first()
-
-    if (!chat) {
-      throw new ConvexError('Chat not found')
-    }
-
-    return chat.activeStreamId
-  },
-})
-
-export const updateChatActiveStreamId = authedMutation({
-  args: {
-    chatId: v.string(),
-    activeStreamId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const chat = await ctx.db
-      .query('chats')
-      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', ctx.userId))
-      .first()
-
-    if (!chat) {
-      throw new ConvexError('Chat not found')
-    }
-
-    await ctx.db.patch(chat._id, { activeStreamId: args.activeStreamId })
-  },
-})
-
-export const clearChatActiveStreamId = authedMutation({
-  args: {
-    chatId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const chat = await ctx.db
-      .query('chats')
-      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', ctx.userId))
-      .first()
-
-    if (!chat) {
-      throw new ConvexError('Chat not found')
-    }
-
-    await ctx.db.patch(chat._id, { activeStreamId: undefined })
   },
 })
 

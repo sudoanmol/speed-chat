@@ -1,17 +1,26 @@
 'use client'
 
 import { useAttachments } from '@/hooks/use-attachments'
-import { models } from '@/lib/ai/models'
+import { AVAILABLE_MODELS, type Model } from '@/lib/models'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from 'convex/react'
 import { ArrowUp, ChevronDown, Paperclip } from 'lucide-react'
-import { useEffect, useRef } from 'react'
-import { toast } from 'react-hot-toast'
+import { useEffect, useMemo, useRef } from 'react'
+import { toast } from 'sonner'
 import { MemoizedFilePreview } from './file-preview'
-import { useChatConfig } from './providers/chat-config-provider'
-import { useChatContext } from './providers/chat-provider'
+import { useChatConfigStore } from '@/lib/stores/chat-config-store'
+import { useChatContext } from '@/lib/stores/chat-store'
 import { Button } from './ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 import { Textarea } from './ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
@@ -37,7 +46,9 @@ export function ChatInput({
     filesToUpload,
     setFilesToUpload,
   } = useChatContext()
-  const { config, updateConfig, isLoading } = useChatConfig()
+  const config = useChatConfigStore((s) => s.config)
+  const updateConfig = useChatConfigStore((s) => s.updateConfig)
+  const isHydrated = useChatConfigStore((s) => s.isHydrated)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { handleFileChange, removeFile, isUploading, processFilesAndUpload } = useAttachments({
     filesToSend,
@@ -53,7 +64,24 @@ export function ChatInput({
     }
   }, [droppedFiles, processFilesAndUpload, setDroppedFiles])
 
-  const currentModel = models.find((m) => m.id === config.selectedModelId)
+  // Provider display names
+  const providerDisplayNames: Record<Model['provider'], string> = {
+    google: 'Google',
+    anthropic: 'Anthropic',
+    openai: 'OpenAI',
+    'z-ai': 'Z-AI',
+    moonshotai: 'Moonshot AI',
+  }
+
+  // Group models by provider
+  const modelsByProvider = useMemo(() => {
+    const grouped = new Map<Model['provider'], Model[]>()
+    for (const model of AVAILABLE_MODELS) {
+      const existing = grouped.get(model.provider) ?? []
+      grouped.set(model.provider, [...existing, model])
+    }
+    return grouped
+  }, [])
 
   return (
     <form
@@ -77,7 +105,7 @@ export function ChatInput({
       )}
       <Textarea
         autoFocus
-        className="placeholder:text-muted-foreground max-h-[120px] min-h-[60px] w-full resize-none border-0 bg-transparent! px-1 text-[15px]! shadow-none focus-visible:ring-0"
+        className="placeholder:text-muted-foreground max-h-30 min-h-15 w-full resize-none border-0 bg-transparent! px-1 text-[15px]! shadow-none focus-visible:ring-0"
         onChange={handleInputChange}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
@@ -124,29 +152,36 @@ export function ChatInput({
           />
         </div>
         <div className="flex items-center gap-1">
-          {!isLoading && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="font-normal" suppressHydrationWarning>
-                  {currentModel?.name}
-                  <ChevronDown className="text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-fit rounded-xl p-2" align="end">
-                <div className="flex flex-col gap-1">
-                  {models.map((m) => (
-                    <DropdownMenuItem
-                      className="flex items-center justify-between gap-2 rounded-lg"
-                      key={m.id}
-                      onClick={() => updateConfig({ selectedModelId: m.id })}
-                    >
-                      {m.name}
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="font-normal" suppressHydrationWarning>
+                {!isHydrated ? 'Loading...' : config.selectedModel.name}
+                <ChevronDown className="text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-fit rounded-xl p-2" align="end">
+              {Array.from(modelsByProvider.entries()).map(([provider, models]) => (
+                <DropdownMenuSub key={provider}>
+                  <DropdownMenuSubTrigger className="rounded-lg">
+                    {providerDisplayNames[provider]}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="rounded-xl p-1">
+                      {models.map((model) => (
+                        <DropdownMenuItem
+                          className="rounded-lg"
+                          key={`${model.id}-${model.thinking}`}
+                          onClick={() => updateConfig({ selectedModel: model })}
+                        >
+                          {model.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             className="rounded-full"
             disabled={(status === 'ready' && !input.trim()) || isStreaming}

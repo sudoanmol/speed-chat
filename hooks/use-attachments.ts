@@ -1,9 +1,9 @@
 import { api } from '@/convex/_generated/api'
-import { getErrorMessage } from '@/lib/error'
+import { getErrorMessage } from '@/lib/convex-error'
 import type { FileUIPart } from 'ai'
 import { useConvexAuth, useMutation } from 'convex/react'
 import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 type UseAttachmentsProps = {
   filesToSend: FileUIPart[]

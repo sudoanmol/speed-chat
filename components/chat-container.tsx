@@ -5,14 +5,14 @@ import { ArrowDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
 import { ChatInput } from './chat-input'
 import { Header } from './header'
 import { Messages } from './messages'
-import { ChatProvider, useChatContext } from './providers/chat-provider'
-import { useDialogs } from './providers/dialogs-provider'
+import { ChatProvider, useChatContext } from '@/lib/stores/chat-store'
+import { SearchDialog } from './search-dialog'
 import { Button } from './ui/button'
 
 export function ChatContainerParent({ paramsChatId }: { paramsChatId: string }) {
@@ -29,7 +29,7 @@ function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
   const noActiveChat = !paramsChatId && messages.length === 0
   const [droppedFiles, setDroppedFiles] = useState<File[]>([])
   const router = useRouter()
-  const { setOpenSearchDialog } = useDialogs()
+  const [openSearchDialog, setOpenSearchDialog] = useState(false)
 
   useHotkeys('meta+k, ctrl+k', () => setOpenSearchDialog(true), {
     enableOnFormTags: ['INPUT', 'TEXTAREA', 'SELECT'],
@@ -90,6 +90,7 @@ function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
           </div>
         </StickToBottom>
       )}
+      <SearchDialog open={openSearchDialog} onOpenChange={setOpenSearchDialog} />
     </div>
   )
 }

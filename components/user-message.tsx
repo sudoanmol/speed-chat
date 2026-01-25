@@ -1,13 +1,13 @@
 import { api } from '@/convex/_generated/api'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { getErrorMessage } from '@/lib/error'
+import { getErrorMessage } from '@/lib/convex-error'
 import { UIMessageWithMetadata } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useMutation } from 'convex/react'
 import { Check, Copy, ImageIcon, PaperclipIcon, Pencil, XIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { toast } from 'react-hot-toast'
-import { useChatContext } from './providers/chat-provider'
+import { toast } from 'sonner'
+import { useChatContext } from '@/lib/stores/chat-store'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
@@ -171,7 +171,7 @@ export function UserMessage({ message }: { message: UIMessageWithMetadata }) {
                           handleSend()
                         }
                       }}
-                      className="min-h-[60px] w-full resize-none border-0 bg-transparent! px-2 shadow-none outline-none focus-visible:ring-0"
+                      className="min-h-15 w-full resize-none border-0 bg-transparent! px-2 shadow-none outline-none focus-visible:ring-0"
                       rows={3}
                     />
                     <div className="flex justify-end gap-2">

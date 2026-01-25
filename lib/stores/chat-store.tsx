@@ -1,20 +1,20 @@
 'use client'
 
 import { api } from '@/convex/_generated/api'
-import { models } from '@/lib/ai/models'
-import type { ChatRequest, Model, UIMessageWithMetadata } from '@/lib/types'
+import type { ChatRequest } from '@/convex/http'
+import type { Model } from '@/lib/models'
+import type { UIMessageWithMetadata } from '@/lib/types'
 import { useQueryWithStatus } from '@/lib/utils'
-import { useChat, UseChatHelpers } from '@ai-sdk/react'
-import { createIdGenerator, DefaultChatTransport, FileUIPart } from 'ai'
+import { useChat, type UseChatHelpers } from '@ai-sdk/react'
+import { useAuthToken } from '@convex-dev/auth/react'
+import { DefaultChatTransport, type FileUIPart } from 'ai'
 import { useConvexAuth } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { toast } from 'react-hot-toast'
-import { Button } from '../ui/button'
-import { useChatConfig } from './chat-config-provider'
-import { useDialogs } from './dialogs-provider'
+import { toast } from 'sonner'
+import { generateId, useChatConfigStore } from './chat-config-store'
 
-type ChatContextType = {
+export type ChatState = {
   input: string
   setInput: (input: string) => void
   inputRef: React.RefObject<HTMLTextAreaElement | null>
@@ -33,18 +33,44 @@ type ChatContextType = {
   error: UseChatHelpers<UIMessageWithMetadata>['error']
   clearError: UseChatHelpers<UIMessageWithMetadata>['clearError']
   buildBodyAndHeaders: () => {
-    body: { chatId: string; model: Model | undefined; isNewChat: boolean }
-    headers: { 'x-api-key': string }
+    body: { chatId: string; model: Model; isNewChat: boolean }
+    headers: { 'X-API-Key': string; Authorization?: string }
   }
 }
 
-export const ChatContext = createContext<ChatContextType | undefined>(undefined)
+const ChatContext = createContext<ChatState | undefined>(undefined)
 
-export const ChatProvider = ({ children, paramsChatId }: { children: React.ReactNode; paramsChatId: string }) => {
+export function ChatProvider({ children, paramsChatId }: { children: React.ReactNode; paramsChatId: string }) {
   const router = useRouter()
   const { isAuthenticated } = useConvexAuth()
-  const { config, chatId, updateDraftMessageEntry, clearDraftMessageEntry, isLoading: configLoading } = useChatConfig()
-  const { setOpenApiKeyDialog } = useDialogs()
+  const token = useAuthToken()
+
+  // Get config from zustand store
+  const config = useChatConfigStore((s) => s.config)
+  const isHydrated = useChatConfigStore((s) => s.isHydrated)
+  const storeChatId = useChatConfigStore((s) => s.chatId)
+  const setChatId = useChatConfigStore((s) => s.setChatId)
+  const updateDraftMessageEntry = useChatConfigStore((s) => s.updateDraftMessageEntry)
+  const clearDraftMessageEntry = useChatConfigStore((s) => s.clearDraftMessageEntry)
+
+  // Generate a stable ID for new chats (when no paramsChatId)
+  const newChatIdRef = useRef<string | null>(null)
+  if (!paramsChatId && !newChatIdRef.current) {
+    newChatIdRef.current = generateId()
+  }
+  // Reset the ref when we navigate to a specific chat
+  if (paramsChatId) {
+    newChatIdRef.current = null
+  }
+
+  // The effective chatId: use paramsChatId if available, otherwise use the generated new chat ID
+  const chatId = paramsChatId || newChatIdRef.current || storeChatId
+
+  // Sync chatId to store
+  useEffect(() => {
+    setChatId(chatId)
+  }, [chatId, setChatId])
+
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [input, setInput] = useState('')
   const [filesToSend, setFilesToSend] = useState<FileUIPart[]>([])
@@ -63,36 +89,36 @@ export const ChatProvider = ({ children, paramsChatId }: { children: React.React
     }
   }, [isError, router, paramsChatId])
 
-  const { messages, sendMessage, status, setMessages, regenerate, error, clearError, resumeStream } =
-    useChat<UIMessageWithMetadata>({
-      id: chatId,
-      generateId: createIdGenerator({
-        prefix: 'user',
-        size: 16,
-      }),
-      transport: new DefaultChatTransport({
-        api: '/api/chat',
-      }),
-      onError: (error) => {
-        try {
-          const errorData = JSON.parse(error.message)
-          toast.error(errorData.error || error.message)
-        } catch {
-          toast.error(error.message)
-        }
-      },
-    })
+  const { messages, sendMessage, status, setMessages, regenerate, error, clearError } = useChat<UIMessageWithMetadata>({
+    id: chatId,
+    transport: new DefaultChatTransport({
+      api: `${process.env.NEXT_PUBLIC_CONVEX_SITE_URL}/api/chat`,
+    }),
+    onError: (error) => {
+      try {
+        const errorData = JSON.parse(error.message)
+        toast.error(errorData.error || error.message)
+      } catch {
+        toast.error(error.message)
+      }
+    },
+  })
 
+  // Clear messages when chatId changes or when we have initial messages to load
   useEffect(() => {
-    // Always set messages when initialMessages or chatId changes
-    // This ensures old messages are cleared when navigating between chats
-    setMessages(initialMessages || [])
-  }, [initialMessages, chatId, setMessages])
+    if (paramsChatId && initialMessages) {
+      // Loading an existing chat - set its messages
+      setMessages(initialMessages)
+    } else if (!paramsChatId) {
+      // New chat (home page) - clear messages
+      setMessages([])
+    }
+  }, [initialMessages, paramsChatId, setMessages])
 
   // Load draft message and files only once on mount when on homepage
   const hasLoadedDraftRef = useRef(false)
   useEffect(() => {
-    if (!configLoading && !paramsChatId && config.draftMessageEntry && !hasLoadedDraftRef.current) {
+    if (isHydrated && !paramsChatId && config.draftMessageEntry && !hasLoadedDraftRef.current) {
       setInput(config.draftMessageEntry.message)
       setFilesToSend(config.draftMessageEntry.files)
 
@@ -103,12 +129,11 @@ export const ChatProvider = ({ children, paramsChatId }: { children: React.React
 
       hasLoadedDraftRef.current = true
     }
-  }, [configLoading, paramsChatId, config.draftMessageEntry])
+  }, [isHydrated, paramsChatId, config.draftMessageEntry])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     setInput(value)
-    // Only save to localStorage if on homepage
     if (!paramsChatId && hasLoadedDraftRef.current) {
       updateDraftMessageEntry(value, filesToSend)
     }
@@ -116,11 +141,11 @@ export const ChatProvider = ({ children, paramsChatId }: { children: React.React
 
   // Persist filesToSend whenever they change
   useEffect(() => {
-    if (!configLoading && !paramsChatId && hasLoadedDraftRef.current) {
+    if (isHydrated && !paramsChatId && hasLoadedDraftRef.current) {
       updateDraftMessageEntry(input, filesToSend)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configLoading, filesToSend, paramsChatId, input])
+  }, [isHydrated, filesToSend, paramsChatId, input])
 
   const isStreaming = status === 'streaming' || status === 'submitted'
 
@@ -129,14 +154,15 @@ export const ChatProvider = ({ children, paramsChatId }: { children: React.React
     return {
       body: {
         chatId,
-        model: models.find((m) => m.id === config.selectedModelId)!,
+        model: config.selectedModel,
         isNewChat: isFirstMessage,
       } satisfies Omit<ChatRequest, 'messages'>,
       headers: {
-        'x-api-key': config.apiKey,
+        'X-API-Key': config.apiKey,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     }
-  }, [chatId, config, messages])
+  }, [chatId, config, messages, token])
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -151,21 +177,7 @@ export const ChatProvider = ({ children, paramsChatId }: { children: React.React
     }
 
     if (!config.apiKey) {
-      toast.error((t) => (
-        <div className="flex items-center gap-2">
-          <p>Please set an API key</p>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setOpenApiKeyDialog(true)
-              toast.dismiss(t.id)
-            }}
-          >
-            Set API Key
-          </Button>
-        </div>
-      ))
+      toast.error('Please set your API key in Settings')
       return
     }
 
@@ -189,17 +201,10 @@ export const ChatProvider = ({ children, paramsChatId }: { children: React.React
     setInput('')
     setFilesToSend([])
     setFilesToUpload([])
-    // Clear draft message from localStorage when starting new chat
     if (!paramsChatId) {
       clearDraftMessageEntry()
     }
   }
-
-  useEffect(() => {
-    if (paramsChatId === chatId) {
-      resumeStream()
-    }
-  }, [paramsChatId, chatId, resumeStream])
 
   return (
     <ChatContext.Provider

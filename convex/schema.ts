@@ -15,7 +15,6 @@ const schema = defineSchema({
     isPinned: v.boolean(),
     isShared: v.boolean(),
     parentChatId: v.optional(v.string()),
-    activeStreamId: v.optional(v.string()),
   })
     .index('by_chat_id', ['id'])
     .index('by_chat_id_and_user_id', ['id', 'userId'])
@@ -32,6 +31,7 @@ const schema = defineSchema({
     metadata: v.optional(
       v.object({
         modelId: v.string(),
+        usedThinking: v.boolean(),
       })
     ),
     role: v.union(v.literal('system'), v.literal('user'), v.literal('assistant')),

@@ -2,14 +2,14 @@
 
 import { useAttachments } from '@/hooks/use-attachments'
 import { AVAILABLE_MODELS, type Model } from '@/lib/models'
+import { useChatConfigStore } from '@/lib/stores/chat-config-store'
+import { useChatContext } from '@/lib/stores/chat-store'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from 'convex/react'
 import { ArrowUp, ChevronDown, Paperclip } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { MemoizedFilePreview } from './file-preview'
-import { useChatConfigStore } from '@/lib/stores/chat-config-store'
-import { useChatContext } from '@/lib/stores/chat-store'
 import { Button } from './ui/button'
 import {
   DropdownMenu,

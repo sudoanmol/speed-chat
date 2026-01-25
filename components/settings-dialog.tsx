@@ -14,13 +14,13 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/convex/_generated/api'
 import { getErrorMessage } from '@/lib/convex-error'
+import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { useMutation } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { ConfirmationDialog } from './confirmation-dialog'
-import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 
 const openRouterKeySchema = z
   .string()

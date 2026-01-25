@@ -12,7 +12,13 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write . --cache",
     "shadcn-add": "bunx shadcn@latest add",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,json,md,css}": [
+      "bun run format"
+    ]
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.51",

@@ -8,8 +8,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { BaseUserMessage } from '@/components/user-message'
 import { api } from '@/convex/_generated/api'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { AVAILABLE_MODELS, type Model } from '@/lib/models'
 import { getErrorMessage } from '@/lib/convex-error'
+import { AVAILABLE_MODELS, type Model } from '@/lib/models'
+import { generateId } from '@/lib/stores/chat-config-store'
 import type { UIMessageWithMetadata } from '@/lib/types'
 import { type Preloaded, useConvexAuth, useMutation, usePreloadedQuery } from 'convex/react'
 import { Check, Copy, GitFork, Info, Loader2 } from 'lucide-react'
@@ -18,7 +19,6 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Header } from './header'
-import { generateId } from '@/lib/stores/chat-config-store'
 
 type SharedChatContainerProps = {
   preloadedChat: Preloaded<typeof api.chat.getSharedChat>

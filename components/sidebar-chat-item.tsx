@@ -14,13 +14,13 @@ import { api } from '@/convex/_generated/api'
 import type { Chat } from '@/convex/chat'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getErrorMessage } from '@/lib/convex-error'
+import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { useMutation } from 'convex/react'
 import { GitBranch, Link2, Link2Off, Loader2, MoreHorizontal, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 
 export function SidebarChatItem({ chat }: { chat: Chat }) {
   const isMobile = useIsMobile()

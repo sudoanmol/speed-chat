@@ -1,5 +1,5 @@
-import { AssistantMessage } from './assistant-message'
 import { useChatContext } from '@/lib/stores/chat-store'
+import { AssistantMessage } from './assistant-message'
 import { UserMessage } from './user-message'
 
 export function Messages() {

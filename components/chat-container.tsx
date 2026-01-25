@@ -80,15 +80,17 @@ function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
           <ChatInput isDragActive={isDragActive} droppedFiles={droppedFiles} setDroppedFiles={setDroppedFiles} />
         </div>
       ) : (
-        <StickToBottom className="relative flex min-h-0 flex-1 flex-col" resize="instant" initial="instant">
-          <StickToBottom.Content className="overflow-y-auto px-4 md:px-0">
-            {isLoadingMessages ? null : <Messages />}
-          </StickToBottom.Content>
-          <ScrollToBottom />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <StickToBottom className="relative min-h-0 flex-1" resize="instant" initial="instant">
+            <StickToBottom.Content className="flex flex-col px-4 md:px-0">
+              {isLoadingMessages ? null : <Messages />}
+            </StickToBottom.Content>
+            <ScrollToBottom />
+          </StickToBottom>
           <div className="shrink-0 px-2 pb-2">
             <ChatInput isDragActive={isDragActive} droppedFiles={droppedFiles} setDroppedFiles={setDroppedFiles} />
           </div>
-        </StickToBottom>
+        </div>
       )}
       <SearchDialog open={openSearchDialog} onOpenChange={setOpenSearchDialog} />
     </div>
@@ -100,7 +102,7 @@ function ScrollToBottom() {
 
   return (
     !isAtBottom && (
-      <div className="absolute bottom-34 left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
         <Button
           size="icon-sm"
           variant="outline"

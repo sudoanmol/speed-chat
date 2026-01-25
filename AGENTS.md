@@ -18,3 +18,13 @@
 - Never cast to any type.
 - Use `convex-helpers/server/relationships` for queries with single indexes. These cannot be used with compound indexes. It exports `getOneFrom` (one-to-many), `getManyFrom` (many-to-one), `getAll` (all items), and `getManyVia` (many-to-many) functions.
 - Use authedMutation, authedQuery, and authedAction from convex/user.ts when the convex functions need authed user. It puts the authed user's userId into ctx so you can use ctx.userId directly.
+
+## Scripts
+
+- `bun run dev` - Start dev server (runs Next.js and Convex in parallel via mprocs). NEVER RUN THIS. ALWAYS ASSUME DEV SERVERS ARE ALREADY RUNNING.
+- `bun run build` - Build for production
+- `bun run lint` - Run ESLint
+- `bun run lint:fix` - Run ESLint with auto-fix
+- `bun run format` - Format code with Prettier
+- `bun run typecheck` - Run TypeScript type checking
+- `bun run shadcn-add <component>` - Add shadcn/ui components

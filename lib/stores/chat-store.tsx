@@ -2,6 +2,7 @@
 
 import { api } from '@/convex/_generated/api'
 import type { ChatRequest } from '@/convex/http'
+import { useChatIdSync } from '@/hooks/use-chat-id-sync'
 import type { Model } from '@/lib/models'
 import type { UIMessageWithMetadata } from '@/lib/types'
 import { useQueryWithStatus } from '@/lib/utils'
@@ -12,7 +13,7 @@ import { useConvexAuth } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { generateId, useChatConfigStore } from './chat-config-store'
+import { useChatConfigStore } from './chat-config-store'
 
 export type ChatState = {
   input: string
@@ -48,28 +49,11 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
   // Get config from zustand store
   const config = useChatConfigStore((s) => s.config)
   const isHydrated = useChatConfigStore((s) => s.isHydrated)
-  const storeChatId = useChatConfigStore((s) => s.chatId)
-  const setChatId = useChatConfigStore((s) => s.setChatId)
   const updateDraftMessageEntry = useChatConfigStore((s) => s.updateDraftMessageEntry)
   const clearDraftMessageEntry = useChatConfigStore((s) => s.clearDraftMessageEntry)
 
-  // Generate a stable ID for new chats (when no paramsChatId)
-  const newChatIdRef = useRef<string | null>(null)
-  if (!paramsChatId && !newChatIdRef.current) {
-    newChatIdRef.current = generateId()
-  }
-  // Reset the ref when we navigate to a specific chat
-  if (paramsChatId) {
-    newChatIdRef.current = null
-  }
-
-  // The effective chatId: use paramsChatId if available, otherwise use the generated new chat ID
-  const chatId = paramsChatId || newChatIdRef.current || storeChatId
-
-  // Sync chatId to store
-  useEffect(() => {
-    setChatId(chatId)
-  }, [chatId, setChatId])
+  // Use the hook to manage chatId sync
+  const chatId = useChatIdSync()
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [input, setInput] = useState('')
@@ -104,14 +88,10 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
     },
   })
 
-  // Clear messages when chatId changes or when we have initial messages to load
+  // Load initial messages when viewing an existing chat
   useEffect(() => {
     if (paramsChatId && initialMessages) {
-      // Loading an existing chat - set its messages
       setMessages(initialMessages)
-    } else if (!paramsChatId) {
-      // New chat (home page) - clear messages
-      setMessages([])
     }
   }, [initialMessages, paramsChatId, setMessages])
 

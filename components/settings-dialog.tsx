@@ -17,7 +17,7 @@ import { getErrorMessage } from '@/lib/convex-error'
 import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { useMutation } from 'convex/react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { ConfirmationDialog } from './confirmation-dialog'
@@ -148,8 +148,14 @@ type ApiKeyDialogProps = {
 function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
   const config = useChatConfigStore((s) => s.config)
   const updateConfig = useChatConfigStore((s) => s.updateConfig)
-  const [key, setKey] = useState(config.apiKey ?? '')
+  const [key, setKey] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setKey(config.apiKey ?? '')
+    }
+  }, [open, config.apiKey])
 
   const handleSave = () => {
     const result = openRouterKeySchema.safeParse(key)

@@ -321,45 +321,45 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
           .map((part, index) => {
             const id = `${message.id}-${part.type}-${index}`
 
-            switch (part.type) {
-              case 'reasoning':
-                return (
-                  <Reasoning key={id} isStreaming={part.state === 'streaming'}>
-                    <ReasoningTrigger />
-                    <ReasoningContent>{part.text}</ReasoningContent>
-                  </Reasoning>
-                )
-
-              case 'text':
-                return (
-                  <MessageResponse key={id} isAnimating={isAnimating}>
-                    {part.text}
-                  </MessageResponse>
-                )
-
-              default:
-                if (isToolUIPart(part)) {
-                  const toolName = getToolName(part)
-                  const isWebSearch = part.type === 'tool-webSearch'
-
-                  return (
-                    <Tool key={id}>
-                      <ToolHeader title={toolName} type={part.type} state={part.state} />
-                      <ToolContent>
-                        <ToolInput input={part.input} />
-                        {part.state === 'output-available' &&
-                          (isWebSearch ? (
-                            <WebSearchResults output={part.output as { results: ExaSearchResult[] }} />
-                          ) : (
-                            <ToolOutput output={part.output} errorText={undefined} />
-                          ))}
-                        {part.state === 'output-error' && <ToolOutput output={undefined} errorText={part.errorText} />}
-                      </ToolContent>
-                    </Tool>
-                  )
-                }
-                return null
+            if (part.type === 'reasoning') {
+              return (
+                <Reasoning key={id} isStreaming={part.state === 'streaming'}>
+                  <ReasoningTrigger />
+                  <ReasoningContent>{part.text}</ReasoningContent>
+                </Reasoning>
+              )
             }
+
+            if (part.type === 'text') {
+              return (
+                <MessageResponse key={id} isAnimating={isAnimating}>
+                  {part.text}
+                </MessageResponse>
+              )
+            }
+
+            if (isToolUIPart(part)) {
+              const toolName = getToolName(part)
+              const isWebSearch = part.type === 'tool-webSearch'
+
+              return (
+                <Tool key={id}>
+                  <ToolHeader title={toolName} type={part.type} state={part.state} />
+                  <ToolContent>
+                    <ToolInput input={part.input} />
+                    {part.state === 'output-available' &&
+                      (isWebSearch ? (
+                        <WebSearchResults output={part.output as { results: ExaSearchResult[] }} />
+                      ) : (
+                        <ToolOutput output={part.output} errorText={undefined} />
+                      ))}
+                    {part.state === 'output-error' && <ToolOutput output={undefined} errorText={part.errorText} />}
+                  </ToolContent>
+                </Tool>
+              )
+            }
+
+            return null
           })}
       </MessageContent>
       <MessageActions className="opacity-0 transition-opacity group-hover:opacity-100">

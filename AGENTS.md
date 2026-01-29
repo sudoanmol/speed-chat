@@ -26,5 +26,5 @@
 - `bun run lint` - Run ESLint
 - `bun run lint:fix` - Run ESLint with auto-fix
 - `bun run format` - Format code with Prettier
-- `bun run typecheck` - Run TypeScript type checking
+- `bun run typecheck` - Run TypeScript type checking + generate Convex types
 - `bun run shadcn-add <component>` - Add shadcn/ui components

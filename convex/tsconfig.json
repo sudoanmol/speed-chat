@@ -20,6 +20,6 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["./**/*"],
+  "include": ["./**/*", "../lib/prompts.ts"],
   "exclude": ["./_generated"]
 }

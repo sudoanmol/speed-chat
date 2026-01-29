@@ -1,13 +1,14 @@
+import { getAuthUserId } from '@convex-dev/auth/server'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { convertToModelMessages, generateText } from 'ai'
 import { getManyFrom, getOneFrom } from 'convex-helpers/server/relationships'
 import { FunctionReturnType } from 'convex/server'
 import { ConvexError, v } from 'convex/values'
+import { titleGenPrompt } from '../lib/prompts'
 import type { UIMessageWithMetadata } from '../lib/types'
 import { api, internal } from './_generated/api'
-import { internalAction, internalMutation, query } from './_generated/server'
-import { titleGenPrompt } from './prompts'
-import { authedMutation, authedQuery } from './utils'
+import { internalMutation, query } from './_generated/server'
+import { authedAction, authedMutation, authedQuery } from './utils'
 
 export const getAllChats = authedQuery({
   handler: async (ctx) => {
@@ -45,15 +46,14 @@ export const getChatMessages = authedQuery({
   },
 })
 
-export const createChat = internalMutation({
+export const createChat = authedMutation({
   args: {
     chatId: v.string(),
-    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert('chats', {
       id: args.chatId,
-      userId: args.userId,
+      userId: ctx.userId,
       title: 'New Chat',
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -64,12 +64,11 @@ export const createChat = internalMutation({
   },
 })
 
-export const generateChatTitle = internalAction({
+export const generateChatTitle = authedAction({
   args: {
     chatId: v.string(),
     apiKey: v.string(),
     userMessage: v.any(),
-    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     const openrouter = createOpenRouter({
@@ -77,14 +76,15 @@ export const generateChatTitle = internalAction({
     })
 
     const response = await generateText({
-      model: openrouter('google/gemini-2.5-flash'),
+      model: openrouter('google/gemini-3-flash-preview'),
       system: titleGenPrompt,
       messages: await convertToModelMessages([args.userMessage as UIMessageWithMetadata]),
+      maxOutputTokens: 50,
     })
 
     if (response.text) {
       await ctx.runMutation(internal.chat.updateChatTitle, {
-        userId: args.userId,
+        userId: ctx.userId,
         chatId: args.chatId,
         title: response.text,
       })
@@ -112,18 +112,17 @@ export const updateChatTitle = internalMutation({
   },
 })
 
-export const upsertMessage = internalMutation({
+export const upsertMessage = authedMutation({
   args: {
     chatId: v.string(),
     message: v.any(),
-    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     const message = args.message as UIMessageWithMetadata
 
     const chat = await ctx.db
       .query('chats')
-      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', args.userId))
+      .withIndex('by_chat_id_and_user_id', (q) => q.eq('id', args.chatId).eq('userId', ctx.userId))
       .first()
 
     if (!chat) {
@@ -182,8 +181,7 @@ export const getSharedChat = query({
       throw new ConvexError('Chat not found or not shared')
     }
 
-    const identity = await ctx.auth.getUserIdentity()
-    const userId = identity?.tokenIdentifier
+    const userId = await getAuthUserId(ctx)
 
     const chatData = {
       id: chat.id,

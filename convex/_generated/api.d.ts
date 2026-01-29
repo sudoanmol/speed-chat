@@ -13,7 +13,6 @@ import type * as chat from "../chat.js";
 import type * as chatActions from "../chatActions.js";
 import type * as delete_ from "../delete.js";
 import type * as http from "../http.js";
-import type * as prompts from "../prompts.js";
 import type * as search from "../search.js";
 import type * as storage from "../storage.js";
 import type * as users from "../users.js";
@@ -31,7 +30,6 @@ declare const fullApi: ApiFromModules<{
   chatActions: typeof chatActions;
   delete: typeof delete_;
   http: typeof http;
-  prompts: typeof prompts;
   search: typeof search;
   storage: typeof storage;
   users: typeof users;

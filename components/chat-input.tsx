@@ -43,6 +43,7 @@ export function ChatInput({
     handleSubmit,
     status,
     isStreaming,
+    stop,
     filesToSend,
     setFilesToSend,
     filesToUpload,
@@ -61,10 +62,15 @@ export function ChatInput({
   // Process dropped files when they arrive
   useEffect(() => {
     if (droppedFiles.length > 0) {
+      if (!config.selectedModel.supportsAttachment) {
+        toast.error(`${config.selectedModel.name} does not support file attachments`)
+        setDroppedFiles([])
+        return
+      }
       processFilesAndUpload(droppedFiles)
       setDroppedFiles([])
     }
-  }, [droppedFiles, processFilesAndUpload, setDroppedFiles])
+  }, [droppedFiles, processFilesAndUpload, setDroppedFiles, config.selectedModel])
 
   // Provider display names
   const providerDisplayNames: Record<Model['provider'], string> = {
@@ -126,11 +132,15 @@ export function ChatInput({
             <TooltipTrigger asChild>
               <Button
                 onClick={() => {
-                  if (isAuthenticated) {
-                    fileInputRef.current?.click()
-                  } else {
+                  if (!isAuthenticated) {
                     toast.error('Please sign in to attach files')
+                    return
                   }
+                  if (!config.selectedModel.supportsAttachment) {
+                    toast.error(`${config.selectedModel.name} does not support file attachments`)
+                    return
+                  }
+                  fileInputRef.current?.click()
                 }}
                 size="icon-sm"
                 type="button"
@@ -174,7 +184,13 @@ export function ChatInput({
                         <DropdownMenuItem
                           className="rounded-lg"
                           key={`${model.id}-${model.thinking}`}
-                          onClick={() => updateConfig({ selectedModel: model })}
+                          onClick={() => {
+                            if (!model.supportsAttachment && filesToUpload.length > 0) {
+                              toast.error(`${model.name} does not support file attachments. Remove files first.`)
+                              return
+                            }
+                            updateConfig({ selectedModel: model })
+                          }}
                         >
                           {model.name}
                         </DropdownMenuItem>
@@ -187,12 +203,13 @@ export function ChatInput({
           </DropdownMenu>
           <Button
             className="rounded-full"
-            disabled={(status === 'ready' && !input.trim()) || isStreaming}
+            disabled={status === 'ready' && !input.trim()}
             size="icon-sm"
-            type="submit"
+            type={isStreaming ? 'button' : 'submit'}
+            onClick={isStreaming ? stop : undefined}
           >
             {isStreaming ? <Square className="size-4" /> : <ArrowUp className="size-4" />}
-            <span className="sr-only">Send message</span>
+            <span className="sr-only">{isStreaming ? 'Stop' : 'Send message'}</span>
           </Button>
         </div>
       </div>

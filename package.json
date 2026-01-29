@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write . --cache",
     "shadcn-add": "bunx shadcn@latest add",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && convex dev --once",
     "prepare": "husky"
   },
   "lint-staged": {

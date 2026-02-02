@@ -15,15 +15,14 @@ import {
 import { api } from '@/convex/_generated/api'
 import { getErrorMessage } from '@/lib/convex-error'
 import { useChatConfigStore } from '@/lib/stores/chat-config-store'
-import { useQueryWithStatus } from '@/lib/utils'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { VariantProps } from 'class-variance-authority'
-import { useQuery } from 'convex/react'
-import { ImageIcon, LogIn, LogOut, MessageSquare, PenBox, Search, Settings } from 'lucide-react'
+import { usePaginatedQuery, useQuery } from 'convex/react'
+import { ImageIcon, Loader2, LogIn, LogOut, MessageSquare, PenBox, Search, Settings } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useDocumentTitle } from 'usehooks-ts'
 import { SearchDialog } from './search-dialog'
@@ -40,6 +39,8 @@ import {
 } from './ui/dropdown-menu'
 import { Kbd, KbdGroup } from './ui/kbd'
 
+const PAGE_SIZE = 20
+
 export function AppSidebar() {
   const user = useQuery(api.users.getCurrentUser)
   const isUserLoading = user === undefined
@@ -48,20 +49,39 @@ export function AppSidebar() {
   const chatId = useChatConfigStore((s) => s.chatId)
   const [openSearchDialog, setOpenSearchDialog] = useState(false)
   const [openSettingsDialog, setOpenSettingsDialog] = useState(false)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const {
-    data: chats,
-    error,
-    isSuccess,
-    isPending,
-    isError,
-  } = useQueryWithStatus(api.chat.getAllChats, user ? {} : 'skip')
+    results: chats,
+    status,
+    loadMore,
+  } = usePaginatedQuery(api.chat.getAllChats, user ? {} : 'skip', { initialNumItems: PAGE_SIZE })
+  const isPending = status === 'LoadingFirstPage'
+  const isLoadingMore = status === 'LoadingMore'
+  const canLoadMore = status === 'CanLoadMore'
+
+  const handleLoadMore = useCallback(() => {
+    if (canLoadMore && !isLoadingMore) {
+      loadMore(PAGE_SIZE)
+    }
+  }, [canLoadMore, isLoadingMore, loadMore])
 
   useEffect(() => {
-    if (isError) {
-      toast.error(error.message)
-    }
-  }, [isError, error])
+    const element = loadMoreRef.current
+    if (!element) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          handleLoadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [handleLoadMore])
 
   const pinnedChats = useMemo(() => {
     return chats?.filter((chat) => chat.isPinned)
@@ -136,7 +156,7 @@ export function AppSidebar() {
               <div className="text-muted-foreground mx-auto my-auto flex text-sm">
                 Please sign in to view your chats.
               </div>
-            ) : isPending || (isSuccess && chats?.length === 0) ? null : (
+            ) : isPending || chats?.length === 0 ? null : (
               <>
                 {pinnedChats && pinnedChats.length > 0 && (
                   <>
@@ -158,6 +178,9 @@ export function AppSidebar() {
                     </SidebarMenu>
                   </>
                 )}
+                <div ref={loadMoreRef} className="flex justify-center py-2">
+                  {isLoadingMore && <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />}
+                </div>
               </>
             )}
           </SidebarGroup>

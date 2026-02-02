@@ -1,4 +1,5 @@
 import { getOneFrom } from 'convex-helpers/server/relationships'
+import { paginationOptsValidator } from 'convex/server'
 import { ConvexError, v } from 'convex/values'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
@@ -7,16 +8,14 @@ import { authedMutation, authedQuery } from './utils'
 
 export const getUserGenerations = authedQuery({
   args: {
-    limit: v.optional(v.number()),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const generations = await ctx.db
+    return await ctx.db
       .query('imageGenerations')
       .withIndex('by_user_id', (q) => q.eq('userId', ctx.userId))
       .order('desc')
-      .take(args.limit ?? 50)
-
-    return generations
+      .paginate(args.paginationOpts)
   },
 })
 

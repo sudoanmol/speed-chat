@@ -7,7 +7,7 @@ import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { cn } from '@/lib/utils'
 import { useMutation } from 'convex/react'
 import { ChevronDown, ImageIcon, Loader2, Paperclip, Sparkles, X } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
@@ -28,7 +28,12 @@ export function ImageGenerationForm() {
   const [referenceFile, setReferenceFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const createGeneration = useMutation(api.imageGeneration.createImageGeneration)
   const generateUploadUrl = useMutation(api.storage.generateUploadUrl)
@@ -170,54 +175,60 @@ export function ImageGenerationForm() {
         </div>
 
         <div className="flex items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="font-normal">
-                {selectedModel.name}
-                <ChevronDown className="text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {imageModels.map((model) => (
-                <DropdownMenuItem key={model.id} onClick={() => setSelectedModel(model)}>
-                  {model.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isMounted ? (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="font-normal">
+                    {selectedModel.name}
+                    <ChevronDown className="text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {imageModels.map((model) => (
+                    <DropdownMenuItem key={model.id} onClick={() => setSelectedModel(model)}>
+                      {model.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="font-normal">
-                {aspectRatio}
-                <ChevronDown className="text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {ASPECT_RATIOS.map((ratio) => (
-                <DropdownMenuItem key={ratio} onClick={() => setAspectRatio(ratio)}>
-                  {ratio}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="font-normal">
+                    {aspectRatio}
+                    <ChevronDown className="text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {ASPECT_RATIOS.map((ratio) => (
+                    <DropdownMenuItem key={ratio} onClick={() => setAspectRatio(ratio)}>
+                      {ratio}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-          {isProModel && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="font-normal">
-                  {imageSize}
-                  <ChevronDown className="text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {IMAGE_SIZES.map((size) => (
-                  <DropdownMenuItem key={size} onClick={() => setImageSize(size)}>
-                    {size}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              {isProModel && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="font-normal">
+                      {imageSize}
+                      <ChevronDown className="text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {IMAGE_SIZES.map((size) => (
+                      <DropdownMenuItem key={size} onClick={() => setImageSize(size)}>
+                        {size}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </>
+          ) : (
+            <div className="h-8 w-32" />
           )}
 
           <Button className="rounded-full" disabled={isSubmitting || !prompt.trim()} size="icon-sm" type="submit">

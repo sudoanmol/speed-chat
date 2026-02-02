@@ -2,7 +2,7 @@ import { getAuthUserId } from '@convex-dev/auth/server'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { convertToModelMessages, generateText } from 'ai'
 import { getManyFrom, getOneFrom } from 'convex-helpers/server/relationships'
-import { FunctionReturnType } from 'convex/server'
+import { FunctionReturnType, paginationOptsValidator } from 'convex/server'
 import { ConvexError, v } from 'convex/values'
 import { titleGenPrompt } from '../lib/prompts'
 import type { UIMessageWithMetadata } from '../lib/types'
@@ -11,13 +11,17 @@ import { internalMutation, query } from './_generated/server'
 import { authedAction, authedMutation, authedQuery } from './utils'
 
 export const getAllChats = authedQuery({
-  handler: async (ctx) => {
-    const chats = await getManyFrom(ctx.db, 'chats', 'by_user_id', ctx.userId, 'userId')
-    return chats.sort((a, b) => b.updatedAt - a.updatedAt)
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('chats')
+      .withIndex('by_user_id_and_updated_at', (q) => q.eq('userId', ctx.userId))
+      .order('desc')
+      .paginate(args.paginationOpts)
   },
 })
 
-export type Chat = FunctionReturnType<typeof api.chat.getAllChats>[number]
+export type Chat = FunctionReturnType<typeof api.chat.getAllChats>['page'][number]
 
 export const getChatMessages = authedQuery({
   args: {

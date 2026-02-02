@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
 
-type Generation = FunctionReturnType<typeof api.imageGeneration.getUserGenerations>[number]
+type Generation = FunctionReturnType<typeof api.imageGeneration.getUserGenerations>['page'][number]
 
 export function ImageGenerationGallery({ generations, isLoading }: { generations: Generation[]; isLoading: boolean }) {
   if (isLoading) {
@@ -37,14 +37,14 @@ export function ImageGenerationGallery({ generations, isLoading }: { generations
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-      {generations.map((generation) => (
-        <GenerationCard key={generation.id} generation={generation} />
+      {generations.map((generation, index) => (
+        <GenerationCard key={generation.id} generation={generation} isPriority={index === 0} />
       ))}
     </div>
   )
 }
 
-function GenerationCard({ generation }: { generation: Generation }) {
+function GenerationCard({ generation, isPriority }: { generation: Generation; isPriority: boolean }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const deleteGeneration = useMutation(api.imageGeneration.deleteGeneration)
@@ -98,10 +98,12 @@ function GenerationCard({ generation }: { generation: Generation }) {
               src={generation.resultImageUrl}
               alt={generation.prompt}
               fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
               className="cursor-pointer object-cover"
+              priority={isPriority}
               onClick={() => window.open(generation.resultImageUrl, '_blank')}
             />
-            <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="pointer-events-none absolute inset-0 flex items-end bg-linear-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
               <div className="flex w-full items-center justify-between p-3">
                 <p className="line-clamp-2 flex-1 text-xs text-white">{generation.prompt}</p>
                 <div className="pointer-events-auto flex gap-1">

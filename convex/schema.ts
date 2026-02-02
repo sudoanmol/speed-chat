@@ -19,6 +19,7 @@ const schema = defineSchema({
     .index('by_chat_id', ['id'])
     .index('by_chat_id_and_user_id', ['id', 'userId'])
     .index('by_user_id', ['userId'])
+    .index('by_user_id_and_updated_at', ['userId', 'updatedAt'])
     .index('by_parent_chat_id', ['parentChatId'])
     .searchIndex('by_title', {
       searchField: 'title',

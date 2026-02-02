@@ -15,8 +15,9 @@ import { useConvexAuth, useMutation, usePreloadedQuery, type Preloaded } from 'c
 import { Check, Copy, ExternalLink, GitFork, Info, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
+import { useDocumentTitle } from 'usehooks-ts'
 import {
   Message,
   MessageAction,
@@ -85,9 +86,7 @@ export function SharedChatContainer({ preloadedChat }: SharedChatContainerProps)
   const [isForking, setIsForking] = useState(false)
   const { isCopied, copyToClipboard } = useCopyToClipboard()
 
-  useEffect(() => {
-    document.title = `${chatData.title} | Speed Chat`
-  }, [chatData])
+  useDocumentTitle(`${chatData.title} | Speed Chat`)
 
   const handleFork = async () => {
     if (!isAuthenticated) {

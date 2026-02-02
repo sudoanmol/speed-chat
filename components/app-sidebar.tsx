@@ -19,12 +19,13 @@ import { useQueryWithStatus } from '@/lib/utils'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { VariantProps } from 'class-variance-authority'
 import { useQuery } from 'convex/react'
-import { LogIn, LogOut, MessageSquare, PenBox, Search, Settings } from 'lucide-react'
+import { ImageIcon, LogIn, LogOut, MessageSquare, PenBox, Search, Settings } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { useDocumentTitle } from 'usehooks-ts'
 import { SearchDialog } from './search-dialog'
 import { SettingsDialog } from './settings-dialog'
 import { SidebarChatItem } from './sidebar-chat-item'
@@ -74,11 +75,7 @@ export function AppSidebar() {
     return chats?.find((chat) => chat.id === chatId)
   }, [chats, chatId])
 
-  useEffect(() => {
-    if (currentChat) {
-      document.title = `${currentChat.title} | Speed Chat`
-    }
-  }, [currentChat])
+  useDocumentTitle(currentChat ? `${currentChat.title} | Speed Chat` : 'Speed Chat')
 
   return (
     <>
@@ -119,6 +116,14 @@ export function AppSidebar() {
                       </KbdGroup>
                     </div>
                   </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/generate-images">
+                    <ImageIcon />
+                    Generate images
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

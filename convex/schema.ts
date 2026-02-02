@@ -52,6 +52,24 @@ const schema = defineSchema({
   })
     .index('by_url', ['url'])
     .index('by_user_id', ['userId']),
+
+  imageGenerations: defineTable({
+    id: v.string(),
+    userId: v.id('users'),
+    prompt: v.string(),
+    status: v.union(v.literal('pending'), v.literal('processing'), v.literal('completed'), v.literal('failed')),
+    model: v.string(),
+    aspectRatio: v.optional(v.string()),
+    imageSize: v.optional(v.string()),
+    referenceImageUrl: v.optional(v.string()),
+    resultImageUrl: v.optional(v.string()),
+    resultStorageId: v.optional(v.id('_storage')),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_generation_id', ['id']),
 })
 
 export default schema

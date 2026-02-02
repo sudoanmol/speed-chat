@@ -4,7 +4,7 @@ import { ChatProvider, useChatContext } from '@/lib/stores/chat-store'
 import { useConvexAuth } from 'convex/react'
 import { ArrowDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { toast } from 'sonner'
@@ -24,7 +24,7 @@ export function ChatContainerParent({ paramsChatId }: { paramsChatId: string }) 
 }
 
 function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
-  const { isAuthenticated, isLoading } = useConvexAuth()
+  const { isAuthenticated } = useConvexAuth()
   const { messages, isLoadingMessages } = useChatContext()
   const noActiveChat = !paramsChatId && messages.length === 0
   const [droppedFiles, setDroppedFiles] = useState<File[]>([])
@@ -58,12 +58,6 @@ function ChatContainer({ paramsChatId }: { paramsChatId: string }) {
       toast.error('Only image and PDF files are allowed')
     },
   })
-
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      router.push('/')
-    }
-  }, [isAuthenticated, isLoading, router])
 
   return (
     <div {...getRootProps()} className="relative flex h-screen flex-col overflow-hidden">

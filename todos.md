@@ -1,6 +1,0 @@
-- [x] migrate to new ai elements components??
-- [x] block file uploads for models that dont support it
-- [ ] durable streams
-- [x] add image generation
-- [ ] add opencode background agents
-- [ ] add daytona code execution sandbox integration

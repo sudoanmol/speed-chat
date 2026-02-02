@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { code } from '@streamdown/code'
+import { math } from '@streamdown/math'
 import type { FileUIPart, UIMessage } from 'ai'
 import { ChevronLeftIcon, ChevronRightIcon, PaperclipIcon, XIcon } from 'lucide-react'
 import type { ComponentProps, HTMLAttributes, ReactElement } from 'react'
@@ -250,7 +252,11 @@ export type MessageResponseProps = ComponentProps<typeof Streamdown>
 
 export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
-    <Streamdown className={cn('size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0', className)} {...props} />
+    <Streamdown
+      plugins={{ code: code, math: math }}
+      className={cn('size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0', className)}
+      {...props}
+    />
   ),
   (prevProps, nextProps) => prevProps.children === nextProps.children
 )

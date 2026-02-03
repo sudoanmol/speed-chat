@@ -87,21 +87,12 @@ export async function POST(request: Request) {
     apiKey,
   })
 
-  // Bandaid for Kimi K2.5 and Gemini 3 Flash for now
-  const isKimiK2_5 = model.id.toLowerCase().includes('kimi-k2.5')
-  const isGemini3Flash = model.id.toLowerCase().includes('gemini-3-flash-preview')
-  const shouldSkipExtraBody = (isKimiK2_5 && model.thinking) || (isGemini3Flash && !model.thinking)
-  const extraBody = shouldSkipExtraBody
-    ? undefined
-    : {
-        reasoning: {
-          enabled: model.thinking,
-        },
-      }
-
   const result = streamText({
     model: openrouter.chat(model.id, {
-      ...(extraBody && { extraBody }),
+      includeReasoning: model.thinking,
+      extraBody: {
+        reasoning: { enabled: model.thinking },
+      },
     }),
     system: chatSystemPrompt(model.name),
     messages: await convertToModelMessages(messages),

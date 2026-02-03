@@ -81,10 +81,11 @@ export function ChatInput({
     moonshotai: 'Moonshot AI',
   }
 
-  // Group models by provider
+  // Group models by provider (excluding image models)
   const modelsByProvider = useMemo(() => {
     const grouped = new Map<Model['provider'], Model[]>()
     for (const model of AVAILABLE_MODELS) {
+      if (model.imageModel) continue
       const existing = grouped.get(model.provider) ?? []
       grouped.set(model.provider, [...existing, model])
     }

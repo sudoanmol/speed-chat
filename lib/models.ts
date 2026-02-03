@@ -3,6 +3,7 @@ export type ChatModelId =
   | 'google/gemini-3-pro-preview'
   | 'anthropic/claude-sonnet-4.5'
   | 'anthropic/claude-opus-4.5'
+  | 'openai/gpt-5.2-chat'
   | 'openai/gpt-5.2'
   | 'z-ai/glm-4.7'
   | 'moonshotai/kimi-k2.5'
@@ -27,7 +28,6 @@ export const AVAILABLE_MODELS: Model[] = [
     id: 'google/gemini-3-flash-preview',
     name: 'Gemini 3 Flash',
     thinking: false,
-    default: true,
     supportsAttachment: true,
   },
   {
@@ -74,9 +74,10 @@ export const AVAILABLE_MODELS: Model[] = [
   },
   {
     provider: 'openai',
-    id: 'openai/gpt-5.2',
-    name: 'GPT-5.2',
+    id: 'openai/gpt-5.2-chat',
+    name: 'GPT-5.2 Instant',
     thinking: false,
+    default: true,
     supportsAttachment: true,
   },
   {

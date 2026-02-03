@@ -373,11 +373,7 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
 
             if (part.type === 'text') {
               return (
-                <MessageResponse
-                  key={id}
-                  caret={isAnimating && isLastMessage ? 'block' : undefined}
-                  isAnimating={isAnimating}
-                >
+                <MessageResponse key={id} isAnimating={isAnimating}>
                   {part.text}
                 </MessageResponse>
               )

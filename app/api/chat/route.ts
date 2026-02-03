@@ -1,5 +1,5 @@
 import { api } from '@/convex/_generated/api'
-import { codeExecution, exploreRepo } from '@/lib/code-execution'
+import { codeExecution } from '@/lib/code-execution'
 import { type Model } from '@/lib/models'
 import { chatSystemPrompt } from '@/lib/prompts'
 import type { MessageMetadata } from '@/lib/types'
@@ -113,7 +113,6 @@ export async function POST(request: Request) {
     tools: {
       webSearch: webSearch(),
       codeExecution: codeExecution(),
-      exploreRepo: exploreRepo(apiKey),
     },
   })
 

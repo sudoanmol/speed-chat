@@ -2,7 +2,7 @@
 
 import { api } from '@/convex/_generated/api'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import type { CodeExecutionResult, RepoExplorationResult } from '@/lib/code-execution'
+import type { CodeExecutionResult } from '@/lib/code-execution'
 import { getErrorMessage } from '@/lib/convex-error'
 import { AVAILABLE_MODELS, type Model } from '@/lib/models'
 import { useChatConfigStore } from '@/lib/stores/chat-config-store'
@@ -109,30 +109,6 @@ function CodeExecutionResults({ output }: { output: CodeExecutionResult }) {
       )}
       {!output.stdout && !output.stderr && !output.error && (
         <div className="text-muted-foreground text-sm italic">No output</div>
-      )}
-    </div>
-  )
-}
-
-function RepoExplorationResults({ output }: { output: RepoExplorationResult }) {
-  return (
-    <div className="space-y-2 p-4">
-      <div className="text-muted-foreground flex items-center justify-between text-xs">
-        <span className="font-medium tracking-wide uppercase">Exploration Result</span>
-        <span>{(output.executionTimeMs / 1000).toFixed(1)}s</span>
-      </div>
-      {output.error && (
-        <div className="bg-destructive/10 text-destructive rounded-md p-3 text-xs">
-          <span className="font-medium">Error: </span>
-          {output.error}
-        </div>
-      )}
-      {output.response && (
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <pre className="bg-muted/50 overflow-x-auto rounded-md p-3 text-xs whitespace-pre-wrap">
-            {output.response}
-          </pre>
-        </div>
       )}
     </div>
   )
@@ -411,7 +387,6 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
               const toolName = getToolName(part)
               const isWebSearch = part.type === 'tool-webSearch'
               const isCodeExecution = part.type === 'tool-codeExecution'
-              const isRepoExploration = part.type === 'tool-exploreRepo'
 
               return (
                 <Tool key={id}>
@@ -423,8 +398,6 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
                         <WebSearchResults output={part.output as { results: ExaSearchResult[] }} />
                       ) : isCodeExecution ? (
                         <CodeExecutionResults output={part.output as CodeExecutionResult} />
-                      ) : isRepoExploration ? (
-                        <RepoExplorationResults output={part.output as RepoExplorationResult} />
                       ) : (
                         <ToolOutput output={part.output} errorText={undefined} />
                       ))}

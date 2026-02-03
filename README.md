@@ -1,73 +1,129 @@
 # Speed Chat
 
-An AI chat application built with Next.js, Convex, and Vercel AI SDK, featuring multiple AI models via OpenRouter, file (images and PDFs) upload support, web search, and resumable streams.
+A fully-featured AI chat application with support for multiple frontier models, file uploads, web search, code execution, and image generation. Built with Next.js 16, Convex, and Vercel AI SDK.
 
-## 🚀 Features
+## Features
 
-- **Multiple AI Models** - Support for multiple models via OpenRouter
-- **Web Search Integration** - Enhanced responses with real-time web search using Exa API
-- **File Upload Support** - Upload and send images and PDFs with your messages
-- **Persistent Chat History** - Fully synced chat history to use across devices
-- **Branching Conversations** - Create a new chat from an existing message in a chat
-- **Search Chats** - Search through your chat history and messages
-- **Formatting** - Beautiful formatting of code, latex, tables in AI responses to improve chat experience
-- **Resumable Streams** - Streams automatically resume when page is refreshed or client navigates between chats
-- **Share Chats** - Share your chats and allow other users to fork their own copy
+### Core Chat
 
-## 🛠 Tech Stack
+- **Multi-model support** via OpenRouter (GPT-5.2, Claude Opus/Sonnet, Gemini 3, and more)
+- **Persistent chat history** synced across devices
+- **Draft auto-save** so you never lose unsent messages
+- **Image generation** with configurable aspect ratios and reference images
 
-- [Next.js 16 App Router](https://nextjs.org) - Full stack React framework with server components/actions and api routes
-- [React](https://react.dev) - Library for web and native user interfaces
-- [Convex](https://www.convex.dev) - Reactive backend as a service platform
-- [Convex Helpers](https://github.com/get-convex/convex-helpers) - Helpers to extend the Convex SDK
-- [AI SDK](https://ai-sdk.dev) - Typescript AI toolkit to build AI applications
-- [Better Auth](https://convex-better-auth.netlify.app) - Better Auth Convex integration
-- [TailwindCSS v4](https://tailwindcss.com) - Inline CSS framework
-- [shadcn/ui](https://ui.shadcn.com) - Modern component library built on Radix UI
-- [resumable-stream](https://github.com/vercel/resumable-stream) - Resumable streams for AI SDK
-- [Exa API](https://exa.ai) - Web search API
-- [OpenRouter](https://openrouter.ai) - Unified API routing for LLMs
+### Tools
 
-## 📦 Getting Started
+- **Web search** powered by Exa API for real-time information
+- **Code execution** with Python 3.13 and Node.js 24 via Vercel Sandbox
 
-1. Clone the repository and install dependencies:
+### File Handling
+
+- Upload images and PDFs alongside messages
+- Drag-and-drop support
+- Up to 5 files per message (4MB each)
+
+### Organization
+
+- Pin important conversations
+- Branch/fork conversations from any message in a chat
+- Full-text search across all chats and messages
+- Share chats with public links
+
+### UI
+
+- Dark and light themes
+- Rich formatting for code, LaTeX, and tables
+- Keyboard shortcuts (Cmd+K for search, Cmd+Shift+O for new chat)
+
+## Tech Stack
+
+| Category       | Technologies               |
+| -------------- | -------------------------- |
+| Framework      | Next.js 16 (App Router)    |
+| Backend        | Convex                     |
+| AI             | Vercel AI SDK, OpenRouter  |
+| Auth           | Convex Auth + Google OAuth |
+| Styling        | TailwindCSS v4, shadcn/ui  |
+| State          | Zustand                    |
+| Search         | Exa API                    |
+| Code Execution | Vercel Sandbox             |
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (or pnpm/npm)
+- A [Convex](https://convex.dev) account
+- An [OpenRouter](https://openrouter.ai) API key
+- Google OAuth credentials (for authentication)
+- An [Exa](https://exa.ai) API key (for web search)
+- [Vercel](https://vercel.com) OIDC token for sandbox access (for code execution)
+
+### Installation
+
+1. Clone and install dependencies:
 
 ```bash
-git clone https://github.com/anmol7470/speed-chat.git
+git clone https://github.com/sudoanmol/speed-chat.git
 cd speed-chat
-bun install # or whatever package manager you prefer
+bun install
 ```
 
-2. Setup the .env.local file:
-
-```bash
-cp .env.example .env.local
-# Edit the .env.local file with your own values
-# Convex env vars will be set automatically in the next step
-```
-
-3. Setup Convex dev server:
+2. Start the Convex dev server:
 
 ```bash
 bun run dev:convex
 ```
 
-4. Setup env vars in Convex:
+3. Setup Convex Auth - follow the [Convex Auth docs](https://labs.convex.dev/auth/setup):
 
 ```bash
-bunx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-bunx convex env set SITE_URL http://localhost:3000
-bunx convex env set GOOGLE_CLIENT_ID your_google_client_id
-bunx convex env set GOOGLE_CLIENT_SEVRET your_google_client_secret
-# Following https://convex-better-auth.netlify.app/framework-guides/next
+bunx @convex-dev/auth
 ```
 
-5. Start the Next.js development server:
+4. Add the following variables to your `.env.local`:
+
+```
+EXA_API_KEY=your_exa_api_key
+VERCEL_OIDC_TOKEN=your_vercel_oidc_token
+```
+
+5. Start the development server:
 
 ```bash
-bun run dev # app will be available at http://localhost:3000
+bun run dev # Starts both Next.js and Convex dev servers together using `mprocs`
 ```
 
-## Todos
+## Project Structure
 
-- [ ] Add a way to stop the stream. Currently its [not compatible](https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-resume-streams) with AI SDK when using resume streams.
+```
+src/
+  app/                    # Next.js pages and API routes
+    api/chat/             # Chat streaming endpoint
+    chat/[id]/            # Individual chat view
+    generate-images/      # Image generation page
+    share/[id]/           # Public shared chat view
+  components/             # React components
+    ai-elements/          # Message rendering (code, tools, reasoning)
+    ui/                   # shadcn/ui components
+  hooks/                  # Custom React hooks
+  lib/                    # Utilities, types, and stores
+convex/                   # Backend functions and schema
+  schema.ts               # Database schema
+  chat.ts                 # Chat CRUD operations
+  chatActions.ts          # Chat-related actions (branching, pinning)
+  search.ts               # Full-text search
+  storage.ts              # File upload handling
+  imageGeneration.ts      # Image generation logic
+```
+
+## Scripts
+
+| Command              | Description                                 |
+| -------------------- | ------------------------------------------- |
+| `bun run dev`        | Start development server (Next.js + Convex) |
+| `bun run build`      | Build for production                        |
+| `bun run typecheck`  | Run TypeScript type checking                |
+| `bun run lint`       | Run ESLint                                  |
+| `bun run format`     | Format code with Prettier                   |
+| `bun run shadcn-add` | Add shadcn/ui components                    |

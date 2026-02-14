@@ -58,6 +58,7 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
   const [input, setInput] = useState('')
   const [filesToSend, setFilesToSend] = useState<FileUIPart[]>([])
   const [filesToUpload, setFilesToUpload] = useState<File[]>([])
+  const isDevelopment = process.env.NODE_ENV === 'development'
 
   const {
     data: initialMessages,
@@ -155,7 +156,7 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
       return
     }
 
-    if (!config.apiKey) {
+    if (!isDevelopment && !config.apiKey) {
       toast.error('Please set your API key in Settings')
       return
     }

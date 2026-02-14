@@ -16,6 +16,7 @@ const ChatRequestSchema = z.object({
   messages: z.array(z.custom<UIMessage>()),
   model: z.custom<Model>(),
   isNewChat: z.boolean(),
+  apiKey: z.string().optional(),
 })
 
 export type ChatRequest = z.infer<typeof ChatRequestSchema>
@@ -26,14 +27,6 @@ export async function POST(request: Request) {
   if (!token) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  const apiKey = request.headers.get('X-API-Key')
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key is required' }), {
-      status: 400,
       headers: { 'Content-Type': 'application/json' },
     })
   }
@@ -54,7 +47,17 @@ export async function POST(request: Request) {
     )
   }
 
-  const { chatId, messages, model, isNewChat } = parsed.data
+  const headerApiKey = request.headers.get('X-API-Key')
+  const { chatId, messages, model, isNewChat, apiKey: bodyApiKey } = parsed.data
+  const apiKey =
+    headerApiKey || bodyApiKey || (process.env.NODE_ENV === 'development' ? process.env.OPENROUTER_API_KEY : undefined)
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'API key is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 
   const lastMessage = messages[messages.length - 1]
 

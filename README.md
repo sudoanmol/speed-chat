@@ -86,6 +86,7 @@ bunx @convex-dev/auth
 ```
 EXA_API_KEY=your_exa_api_key
 VERCEL_OIDC_TOKEN=your_vercel_oidc_token
+OPENROUTER_API_KEY=your_openrouter_api_key # If not using local storage to store the API key on the client
 ```
 
 5. Start the development server:

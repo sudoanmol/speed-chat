@@ -7,7 +7,7 @@ import { AVAILABLE_MODELS, type Model } from '@/lib/models'
 import type { UIMessageWithMetadata } from '@/lib/types'
 import { useQueryWithStatus } from '@/lib/utils'
 import { useChat, type UseChatHelpers } from '@ai-sdk/react'
-import { DefaultChatTransport, type FileUIPart } from 'ai'
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type FileUIPart } from 'ai'
 import { useConvexAuth } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
@@ -31,14 +31,11 @@ export type ChatState = {
   status: UseChatHelpers<UIMessageWithMetadata>['status']
   regenerate: UseChatHelpers<UIMessageWithMetadata>['regenerate']
   stop: UseChatHelpers<UIMessageWithMetadata>['stop']
+  addToolOutput: UseChatHelpers<UIMessageWithMetadata>['addToolOutput']
   isLoadingMessages: boolean
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   error: UseChatHelpers<UIMessageWithMetadata>['error']
   clearError: UseChatHelpers<UIMessageWithMetadata>['clearError']
-  buildBodyAndHeaders: () => {
-    body: { chatId: string; model: Model; isNewChat: boolean }
-    headers: { 'X-API-Key': string }
-  }
 }
 
 const ChatContext = createContext<ChatState | undefined>(undefined)
@@ -83,6 +80,19 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
   const [filesToUpload, setFilesToUpload] = useState<File[]>([])
   const [currentModel, setCurrentModelState] = useState<Model>(config.selectedModel)
   const isDevelopment = process.env.NODE_ENV === 'development'
+  const requestContextRef = useRef({
+    chatId,
+    model: currentModel,
+    apiKey: config.apiKey,
+  })
+
+  useEffect(() => {
+    requestContextRef.current = {
+      chatId,
+      model: currentModel,
+      apiKey: config.apiKey,
+    }
+  }, [chatId, currentModel, config.apiKey])
 
   const {
     data: initialMessages,
@@ -97,12 +107,38 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
     }
   }, [isError, router, paramsChatId])
 
-  const { messages, sendMessage, status, setMessages, regenerate, stop, error, clearError } =
+  const { messages, sendMessage, status, setMessages, regenerate, stop, addToolOutput, error, clearError } =
     useChat<UIMessageWithMetadata>({
       id: chatId,
       transport: new DefaultChatTransport({
         api: '/api/chat',
+        prepareSendMessagesRequest: ({ trigger, messageId, messages, headers }) => {
+          const nextHeaders = new Headers(headers)
+          const apiKey = requestContextRef.current.apiKey
+
+          if (apiKey) {
+            nextHeaders.set('X-API-Key', apiKey)
+          }
+
+          const isNewChat =
+            trigger === 'submit-message' &&
+            messageId === undefined &&
+            messages.length === 1 &&
+            messages[0]?.role === 'user'
+
+          return {
+            headers: nextHeaders,
+            body: {
+              messages,
+              chatId: requestContextRef.current.chatId,
+              model: requestContextRef.current.model,
+              isNewChat,
+              ...(apiKey ? { apiKey } : {}),
+            } satisfies ChatRequest,
+          }
+        },
       }),
+      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
       onError: (error) => {
         try {
           const errorData = JSON.parse(error.message)
@@ -185,20 +221,6 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
 
   const isStreaming = status === 'streaming' || status === 'submitted'
 
-  const buildBodyAndHeaders = useCallback(() => {
-    const isFirstMessage = messages.length === 0
-    return {
-      body: {
-        chatId,
-        model: currentModel,
-        isNewChat: isFirstMessage,
-      } satisfies Omit<ChatRequest, 'messages'>,
-      headers: {
-        'X-API-Key': config.apiKey,
-      },
-    }
-  }, [chatId, config.apiKey, currentModel, messages])
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -211,6 +233,17 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
       return
     }
 
+    const lastAssistant = messages.findLast((m) => m.role === 'assistant')
+    if (
+      lastAssistant?.parts.some(
+        (part) =>
+          part.type === 'tool-askQuestions' && (part.state === 'input-available' || part.state === 'input-streaming')
+      )
+    ) {
+      toast.error('Please answer the questions or start a new chat')
+      return
+    }
+
     if (!isDevelopment && !config.apiKey) {
       toast.error('Please set your API key in Settings')
       return
@@ -220,18 +253,10 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
       window.history.replaceState({}, '', `/chat/${chatId}`)
     }
 
-    const { body, headers } = buildBodyAndHeaders()
-
-    sendMessage(
-      {
-        text: input,
-        files: filesToSend,
-      },
-      {
-        body,
-        headers,
-      }
-    )
+    sendMessage({
+      text: input,
+      files: filesToSend,
+    })
 
     setInput('')
     setFilesToSend([])
@@ -260,11 +285,11 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
         status,
         regenerate,
         stop,
+        addToolOutput,
         isLoadingMessages: isPending && !!paramsChatId && !!isAuthenticated,
         handleSubmit,
         error,
         clearError,
-        buildBodyAndHeaders,
       }}
     >
       {children}

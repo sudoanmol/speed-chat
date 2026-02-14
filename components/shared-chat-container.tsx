@@ -28,6 +28,7 @@ import {
 } from './ai-elements/message'
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from './ai-elements/tool'
+import { AskQuestionsTool } from './ask-questions-tool'
 import { Header } from './header'
 
 function WebSearchResults({ output }: { output: { results: ExaSearchResult[] } }) {
@@ -203,6 +204,18 @@ export function SharedChatContainer({ preloadedChat }: SharedChatContainerProps)
                               <MessageResponse key={id} isAnimating={false}>
                                 {part.text}
                               </MessageResponse>
+                            )
+
+                          case 'tool-askQuestions':
+                            return (
+                              <AskQuestionsTool
+                                key={id}
+                                toolCallId={part.toolCallId}
+                                state={part.state}
+                                input={part.input}
+                                output={part.output}
+                                errorText={part.errorText}
+                              />
                             )
 
                           default:

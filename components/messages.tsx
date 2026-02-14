@@ -2,10 +2,10 @@
 
 import { api } from '@/convex/_generated/api'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import type { CodeExecutionResult } from '@/lib/code-execution'
 import { getErrorMessage } from '@/lib/convex-error'
 import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { useChatContext } from '@/lib/stores/chat-store'
+import type { CodeExecutionResult } from '@/lib/tools/code-execution'
 import { UIMessageWithMetadata } from '@/lib/types'
 import type { ExaSearchResult } from '@exalabs/ai-sdk'
 import { getToolName, isToolUIPart, type FileUIPart } from 'ai'
@@ -27,6 +27,7 @@ import {
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning'
 import { Shimmer } from './ai-elements/shimmer'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from './ai-elements/tool'
+import { InteractiveAskQuestionsTool } from './ask-questions-tool'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 
@@ -142,7 +143,7 @@ export function Messages() {
 
 function UserMessage({ message }: { message: UIMessageWithMetadata }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard()
-  const { sendMessage, buildBodyAndHeaders, messages: allMessages } = useChatContext()
+  const { sendMessage, messages: allMessages } = useChatContext()
   const [isEditing, setIsEditing] = useState(false)
   const [editedParts, setEditedParts] = useState(message.parts)
   const [originalParts] = useState(message.parts)
@@ -219,19 +220,11 @@ function UserMessage({ message }: { message: UIMessageWithMetadata }) {
       return
     }
 
-    const { body, headers } = buildBodyAndHeaders()
-
-    sendMessage(
-      {
-        messageId: message.id,
-        text: editedText,
-        ...(editedFiles.length > 0 && { files: editedFiles }),
-      },
-      {
-        body,
-        headers,
-      }
-    )
+    sendMessage({
+      messageId: message.id,
+      text: editedText,
+      ...(editedFiles.length > 0 && { files: editedFiles }),
+    })
 
     setIsEditing(false)
   }
@@ -336,7 +329,7 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
   const router = useRouter()
   const { isCopied, copyToClipboard } = useCopyToClipboard()
   const chatId = useChatConfigStore((s) => s.chatId)
-  const { regenerate, buildBodyAndHeaders } = useChatContext()
+  const { regenerate } = useChatContext()
 
   const deleteMessages = useMutation(api.delete.deleteMessages)
   const branchOffFromMessage = useMutation(api.chatActions.branchOffFromMessage)
@@ -375,6 +368,20 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
                 <MessageResponse key={id} isAnimating={isAnimating}>
                   {part.text}
                 </MessageResponse>
+              )
+            }
+
+            if (part.type === 'tool-askQuestions') {
+              return (
+                <InteractiveAskQuestionsTool
+                  key={id}
+                  message={message}
+                  toolCallId={part.toolCallId}
+                  state={part.state}
+                  input={part.input}
+                  output={part.output}
+                  errorText={part.errorText}
+                />
               )
             }
 
@@ -418,8 +425,7 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
               } catch (error) {
                 toast.error(getErrorMessage(error))
               }
-              const { body, headers } = buildBodyAndHeaders()
-              regenerate({ body, headers })
+              regenerate()
             }}
           >
             <RefreshCw className="size-4" />

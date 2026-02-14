@@ -1,7 +1,8 @@
 import { api } from '@/convex/_generated/api'
-import { codeExecution } from '@/lib/code-execution'
 import { type Model } from '@/lib/models'
 import { chatSystemPrompt } from '@/lib/prompts'
+import { askQuestions } from '@/lib/tools/ask-questions'
+import { codeExecution } from '@/lib/tools/code-execution'
 import type { MessageMetadata } from '@/lib/types'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { webSearch } from '@exalabs/ai-sdk'
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
     tools: {
       webSearch: webSearch(),
       codeExecution: codeExecution(),
+      askQuestions: askQuestions(),
     },
   })
 

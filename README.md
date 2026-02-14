@@ -8,7 +8,7 @@ A fast, full-featured AI chat app with multi-model support, real-time sync, web 
 
 **Image Generation** — Generate images with configurable aspect ratios and reference images using Nano Banana models.
 
-**Tools** — Web search (Exa), code execution (Python 3.13 & Node.js 24 via Vercel Sandbox), and interactive clarification questions when the model needs more context.
+**Tools** — Web search (Exa), code execution (Python 3.13 via Vercel Sandbox with optional dependency install), and interactive clarification questions when the model needs more context.
 
 **Files** — Drag-and-drop or select images and PDFs into messages.
 

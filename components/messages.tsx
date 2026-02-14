@@ -76,6 +76,7 @@ function WebSearchResults({ output }: { output: { results: ExaSearchResult[] } }
 
 function CodeExecutionResults({ output }: { output: CodeExecutionResult }) {
   const hasError = output.exitCode !== 0 || output.error
+  const setup = output.setup
 
   return (
     <div className="space-y-2 p-4">
@@ -89,6 +90,27 @@ function CodeExecutionResults({ output }: { output: CodeExecutionResult }) {
         <div className="bg-destructive/10 text-destructive rounded-md p-3 text-xs">
           <span className="font-medium">Error: </span>
           {output.error}
+        </div>
+      )}
+      {setup && setup.dependencies.length > 0 && (
+        <div className="space-y-1">
+          <h5 className="text-muted-foreground text-xs font-medium">setup</h5>
+          <div className="bg-muted/30 text-muted-foreground rounded-md p-3 text-xs">
+            <div>
+              <span className="font-medium">Installer: </span>
+              {setup.installer}
+            </div>
+            <div>
+              <span className="font-medium">Dependencies: </span>
+              {setup.dependencies.join(', ')}
+            </div>
+          </div>
+          {setup.stdout && (
+            <pre className="bg-muted/50 overflow-x-auto rounded-md p-3 text-xs whitespace-pre-wrap">{setup.stdout}</pre>
+          )}
+          {setup.stderr && (
+            <pre className="bg-muted/50 overflow-x-auto rounded-md p-3 text-xs whitespace-pre-wrap">{setup.stderr}</pre>
+          )}
         </div>
       )}
       {output.stdout && (

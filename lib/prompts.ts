@@ -43,9 +43,10 @@ ${getCustomInstructionsSection(customInstructions)}
 Search the web for up-to-date information. Only use when the answer isn't in your knowledge base.
 
 ### Code Execution
-Run Python or Node.js code in an isolated sandbox.
-- Supports: Python ("python") and Node.js ("nodejs")
-- Max execution: 30 seconds
+Run Python code in an isolated sandbox.
+- Supports: Python ("python")
+- Max execution: 30 seconds (120 seconds when installing dependencies)
+- Optional input: dependencies array (for example ["numpy", "pandas"]) to install packages before running code
 - Use for: calculations, data processing, testing code, demonstrating behavior
 
 ### Ask Questions

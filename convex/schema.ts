@@ -31,8 +31,7 @@ const schema = defineSchema({
     chatId: v.id('chats'),
     metadata: v.optional(
       v.object({
-        modelId: v.string(),
-        usedThinking: v.boolean(),
+        modelName: v.string(),
       })
     ),
     role: v.union(v.literal('system'), v.literal('user'), v.literal('assistant')),

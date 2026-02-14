@@ -83,10 +83,10 @@ bunx @convex-dev/auth
 
 4. Add the following variables to your `.env.local`:
 
-```
+```bash
 EXA_API_KEY=your_exa_api_key
 VERCEL_OIDC_TOKEN=your_vercel_oidc_token
-OPENROUTER_API_KEY=your_openrouter_api_key # If not using local storage to store the API key on the client
+OPENROUTER_API_KEY=your_openrouter_api_key # Optional else will use from local storage
 ```
 
 5. Start the development server:

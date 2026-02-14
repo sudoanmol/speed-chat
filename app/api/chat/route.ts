@@ -115,8 +115,7 @@ export async function POST(request: Request) {
     generateMessageId: () => generateId(),
     messageMetadata: () => {
       const metadata: MessageMetadata = {
-        modelId: model.id,
-        usedThinking: model.thinking,
+        modelName: model.name,
       }
 
       return metadata

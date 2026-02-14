@@ -48,9 +48,9 @@ export function ChatInput({
     setFilesToSend,
     filesToUpload,
     setFilesToUpload,
+    currentModel,
+    setCurrentModel,
   } = useChatContext()
-  const config = useChatConfigStore((s) => s.config)
-  const updateConfig = useChatConfigStore((s) => s.updateConfig)
   const isHydrated = useChatConfigStore((s) => s.isHydrated)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { handleFileChange, removeFile, isUploading, processFilesAndUpload } = useAttachments({
@@ -62,15 +62,15 @@ export function ChatInput({
   // Process dropped files when they arrive
   useEffect(() => {
     if (droppedFiles.length > 0) {
-      if (!config.selectedModel.supportsAttachment) {
-        toast.error(`${config.selectedModel.name} does not support file attachments`)
+      if (!currentModel.supportsAttachment) {
+        toast.error(`${currentModel.name} does not support file attachments`)
         setDroppedFiles([])
         return
       }
       processFilesAndUpload(droppedFiles)
       setDroppedFiles([])
     }
-  }, [droppedFiles, processFilesAndUpload, setDroppedFiles, config.selectedModel])
+  }, [currentModel, droppedFiles, processFilesAndUpload, setDroppedFiles])
 
   // Provider display names
   const providerDisplayNames: Record<Model['provider'], string> = {
@@ -137,8 +137,8 @@ export function ChatInput({
                     toast.error('Please sign in to attach files')
                     return
                   }
-                  if (!config.selectedModel.supportsAttachment) {
-                    toast.error(`${config.selectedModel.name} does not support file attachments`)
+                  if (!currentModel.supportsAttachment) {
+                    toast.error(`${currentModel.name} does not support file attachments`)
                     return
                   }
                   fileInputRef.current?.click()
@@ -169,7 +169,7 @@ export function ChatInput({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="font-normal" suppressHydrationWarning>
-                {!isHydrated ? 'Loading...' : config.selectedModel.name}
+                {!isHydrated ? 'Loading...' : currentModel.name}
                 <ChevronDown className="text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
@@ -190,7 +190,7 @@ export function ChatInput({
                               toast.error(`${model.name} does not support file attachments. Remove files first.`)
                               return
                             }
-                            updateConfig({ selectedModel: model })
+                            setCurrentModel(model)
                           }}
                         >
                           {model.name}

@@ -1,6 +1,6 @@
 import type { UIMessage } from 'ai'
 import * as z from 'zod'
-import type { Model, ModelId } from './models'
+import type { Model } from './models'
 
 export const DraftMessageEntrySchema = z.object({
   message: z.string(),
@@ -18,8 +18,7 @@ export const ChatConfigSchema = z.object({
 export type ChatConfig = z.infer<typeof ChatConfigSchema>
 
 export type MessageMetadata = {
-  modelId: ModelId
-  usedThinking: boolean
+  modelName: string
 }
 
 export type UIMessageWithMetadata = UIMessage<MessageMetadata>

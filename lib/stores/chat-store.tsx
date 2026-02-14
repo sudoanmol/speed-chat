@@ -3,7 +3,7 @@
 import type { ChatRequest } from '@/app/api/chat/route'
 import { api } from '@/convex/_generated/api'
 import { useChatIdSync } from '@/hooks/use-chat-id-sync'
-import type { Model } from '@/lib/models'
+import { AVAILABLE_MODELS, type Model } from '@/lib/models'
 import type { UIMessageWithMetadata } from '@/lib/types'
 import { useQueryWithStatus } from '@/lib/utils'
 import { useChat, type UseChatHelpers } from '@ai-sdk/react'
@@ -23,6 +23,8 @@ export type ChatState = {
   setFilesToSend: React.Dispatch<React.SetStateAction<FileUIPart[]>>
   filesToUpload: File[]
   setFilesToUpload: React.Dispatch<React.SetStateAction<File[]>>
+  currentModel: Model
+  setCurrentModel: (model: Model) => void
   isStreaming: boolean
   messages: UIMessageWithMetadata[]
   sendMessage: UseChatHelpers<UIMessageWithMetadata>['sendMessage']
@@ -41,6 +43,26 @@ export type ChatState = {
 
 const ChatContext = createContext<ChatState | undefined>(undefined)
 
+const getLastAssistantModel = (messages: UIMessageWithMetadata[]): Model | null => {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (message.role !== 'assistant' || !message.metadata) {
+      continue
+    }
+    const metadata = message.metadata
+
+    const matchedModel = AVAILABLE_MODELS.find(
+      (candidate) => !candidate.imageModel && candidate.name === metadata.modelName
+    )
+
+    if (matchedModel) {
+      return matchedModel
+    }
+  }
+
+  return null
+}
+
 export function ChatProvider({ children, paramsChatId }: { children: React.ReactNode; paramsChatId: string }) {
   const router = useRouter()
   const { isAuthenticated } = useConvexAuth()
@@ -48,6 +70,7 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
   // Get config from zustand store
   const config = useChatConfigStore((s) => s.config)
   const isHydrated = useChatConfigStore((s) => s.isHydrated)
+  const updateConfig = useChatConfigStore((s) => s.updateConfig)
   const updateDraftMessageEntry = useChatConfigStore((s) => s.updateDraftMessageEntry)
   const clearDraftMessageEntry = useChatConfigStore((s) => s.clearDraftMessageEntry)
 
@@ -58,6 +81,7 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
   const [input, setInput] = useState('')
   const [filesToSend, setFilesToSend] = useState<FileUIPart[]>([])
   const [filesToUpload, setFilesToUpload] = useState<File[]>([])
+  const [currentModel, setCurrentModelState] = useState<Model>(config.selectedModel)
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   const {
@@ -95,6 +119,37 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
       setMessages(initialMessages)
     }
   }, [initialMessages, paramsChatId, setMessages])
+
+  // Existing chat route follows last assistant model.
+  useEffect(() => {
+    if (!paramsChatId || !initialMessages) {
+      return
+    }
+
+    const modelFromLastAssistant = getLastAssistantModel(initialMessages)
+    if (modelFromLastAssistant) {
+      setCurrentModelState(modelFromLastAssistant)
+    }
+  }, [initialMessages, paramsChatId])
+
+  // Home route follows persisted zustand model.
+  useEffect(() => {
+    if (paramsChatId) {
+      return
+    }
+
+    setCurrentModelState(config.selectedModel)
+  }, [paramsChatId, config.selectedModel])
+
+  const setCurrentModel = useCallback(
+    (model: Model) => {
+      setCurrentModelState(model)
+      if (!paramsChatId) {
+        updateConfig({ selectedModel: model })
+      }
+    },
+    [paramsChatId, updateConfig]
+  )
 
   // Load draft message and files only once on mount when on homepage
   const hasLoadedDraftRef = useRef(false)
@@ -135,14 +190,14 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
     return {
       body: {
         chatId,
-        model: config.selectedModel,
+        model: currentModel,
         isNewChat: isFirstMessage,
       } satisfies Omit<ChatRequest, 'messages'>,
       headers: {
         'X-API-Key': config.apiKey,
       },
     }
-  }, [chatId, config, messages])
+  }, [chatId, config.apiKey, currentModel, messages])
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -197,6 +252,8 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
         setFilesToSend,
         filesToUpload,
         setFilesToUpload,
+        currentModel,
+        setCurrentModel,
         isStreaming,
         messages,
         sendMessage,

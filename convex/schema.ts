@@ -70,6 +70,16 @@ const schema = defineSchema({
   })
     .index('by_user_id', ['userId'])
     .index('by_generation_id', ['id']),
+
+  customInstructions: defineTable({
+    userId: v.id('users'),
+    name: v.optional(v.string()),
+    profession: v.optional(v.string()),
+    aboutUser: v.optional(v.string()),
+    responseInstructions: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_user_id', ['userId']),
 })
 
 export default schema

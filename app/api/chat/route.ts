@@ -3,7 +3,7 @@ import { type Model } from '@/lib/models'
 import { chatSystemPrompt } from '@/lib/prompts'
 import { askQuestions } from '@/lib/tools/ask-questions'
 import { codeExecution } from '@/lib/tools/code-execution'
-import type { MessageMetadata } from '@/lib/types'
+import { CustomInstructionsSchema, type MessageMetadata } from '@/lib/types'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { webSearch } from '@exalabs/ai-sdk'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
@@ -18,6 +18,7 @@ const ChatRequestSchema = z.object({
   model: z.custom<Model>(),
   isNewChat: z.boolean(),
   apiKey: z.string().optional(),
+  customInstructions: CustomInstructionsSchema.optional(),
 })
 
 export type ChatRequest = z.infer<typeof ChatRequestSchema>
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   const headerApiKey = request.headers.get('X-API-Key')
-  const { chatId, messages, model, isNewChat, apiKey: bodyApiKey } = parsed.data
+  const { chatId, messages, model, isNewChat, apiKey: bodyApiKey, customInstructions } = parsed.data
   const apiKey =
     headerApiKey || bodyApiKey || (process.env.NODE_ENV === 'development' ? process.env.OPENROUTER_API_KEY : undefined)
 
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
         reasoning: { enabled: model.thinking },
       },
     }),
-    system: chatSystemPrompt(model.name),
+    system: chatSystemPrompt(model.name, customInstructions),
     messages: await convertToModelMessages(messages),
     abortSignal: request.signal,
     experimental_transform: smoothStream({

@@ -1,6 +1,6 @@
-# Speed Chat
+# ⚡ Speed Chat
 
-A fast, full-featured AI chat app. Multi-model, real-time sync, web search, code execution, and image generation — all in one place. Built with Next.js 16, Convex, and Vercel AI SDK.
+A fast, full-featured AI chat app with multi-model support, real-time sync, web search, code execution, and image generation. Built with Next.js 16, Convex, and Vercel AI SDK.
 
 ## Features
 
@@ -11,6 +11,8 @@ A fast, full-featured AI chat app. Multi-model, real-time sync, web search, code
 **Tools** — Web search (Exa), code execution (Python 3.13 & Node.js 24 via Vercel Sandbox), and interactive clarification questions when the model needs more context.
 
 **Files** — Drag-and-drop or select images and PDFs into messages.
+
+**Custom Instructions** — Add personal context (name, profession, and background) plus response preferences. These are persisted in Convex and automatically appended to the system prompt on every request for a personalized experience.
 
 **Organization** — Pin conversations, branch from any message, full-text search across all chats, and share with public links.
 
@@ -62,7 +64,6 @@ bunx @convex-dev/auth
 ```
 EXA_API_KEY=
 VERCEL_OIDC_TOKEN=
-OPENROUTER_API_KEY=       # optional — falls back to browser local storage
 ```
 
 4. Start development servers:

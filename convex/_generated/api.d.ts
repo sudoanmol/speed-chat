@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as chatActions from "../chatActions.js";
+import type * as customInstructions from "../customInstructions.js";
 import type * as delete_ from "../delete.js";
 import type * as http from "../http.js";
 import type * as imageGeneration from "../imageGeneration.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   chat: typeof chat;
   chatActions: typeof chatActions;
+  customInstructions: typeof customInstructions;
   delete: typeof delete_;
   http: typeof http;
   imageGeneration: typeof imageGeneration;

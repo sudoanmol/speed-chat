@@ -192,10 +192,7 @@ export function AppSidebar() {
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  className="flex h-12 w-full items-center justify-start gap-3 rounded-lg px-2 pb-0"
-                  variant="ghost"
-                >
+                <Button className="flex h-12 w-full items-center justify-start gap-3 rounded-lg px-2" variant="ghost">
                   <Image src={user.image ?? ''} alt={user.name ?? ''} width={30} height={30} className="rounded-full" />
                   <span className="truncate text-sm font-normal">{user.name}</span>
                 </Button>

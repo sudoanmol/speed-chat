@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useChatConfigStore } from './chat-config-store'
+import { useCustomInstructionsStore } from './custom-instructions-store'
 
 export type ChatState = {
   input: string
@@ -70,6 +71,7 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
   const updateConfig = useChatConfigStore((s) => s.updateConfig)
   const updateDraftMessageEntry = useChatConfigStore((s) => s.updateDraftMessageEntry)
   const clearDraftMessageEntry = useChatConfigStore((s) => s.clearDraftMessageEntry)
+  const customInstructions = useCustomInstructionsStore((s) => s.customInstructions)
 
   // Use the hook to manage chatId sync
   const chatId = useChatIdSync()
@@ -84,6 +86,7 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
     chatId,
     model: currentModel,
     apiKey: config.apiKey,
+    customInstructions,
   })
 
   useEffect(() => {
@@ -91,8 +94,9 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
       chatId,
       model: currentModel,
       apiKey: config.apiKey,
+      customInstructions,
     }
-  }, [chatId, currentModel, config.apiKey])
+  }, [chatId, currentModel, config.apiKey, customInstructions])
 
   const {
     data: initialMessages,
@@ -133,6 +137,9 @@ export function ChatProvider({ children, paramsChatId }: { children: React.React
               chatId: requestContextRef.current.chatId,
               model: requestContextRef.current.model,
               isNewChat,
+              ...(requestContextRef.current.customInstructions
+                ? { customInstructions: requestContextRef.current.customInstructions }
+                : {}),
               ...(apiKey ? { apiKey } : {}),
             } satisfies ChatRequest,
           }

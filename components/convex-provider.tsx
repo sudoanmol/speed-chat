@@ -1,5 +1,6 @@
 'use client'
 
+import { CustomInstructionsLoader } from '@/components/custom-instructions-loader'
 import { ConvexAuthNextjsProvider } from '@convex-dev/auth/nextjs'
 import { ConvexQueryCacheProvider } from 'convex-helpers/react/cache/provider'
 import { ConvexReactClient } from 'convex/react'
@@ -10,7 +11,10 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 export function ConvexProvider({ children }: { children: ReactNode }) {
   return (
     <ConvexAuthNextjsProvider client={convex}>
-      <ConvexQueryCacheProvider>{children}</ConvexQueryCacheProvider>
+      <ConvexQueryCacheProvider>
+        <CustomInstructionsLoader />
+        {children}
+      </ConvexQueryCacheProvider>
     </ConvexAuthNextjsProvider>
   )
 }

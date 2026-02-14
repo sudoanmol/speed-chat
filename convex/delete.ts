@@ -129,6 +129,11 @@ export const deleteAccount = authedMutation({
       await ctx.db.delete(chat._id)
     }
 
+    const customInstructions = await getOneFrom(ctx.db, 'customInstructions', 'by_user_id', ctx.userId, 'userId')
+    if (customInstructions) {
+      await ctx.db.delete(customInstructions._id)
+    }
+
     // TODO: Delete user from database
   },
 })

@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import type { CustomInstructions } from './types'
 
 export const titleGenPrompt = `
 You need to generate a short title based on the first message a user begins a conversation with.
@@ -8,9 +9,31 @@ Do not use quotes or colons or any special characters.
 Return ONLY the title, nothing else.
 `
 
-export const chatSystemPrompt = (modelName: string) => `
+const getCustomInstructionsSection = (customInstructions?: CustomInstructions) => {
+  if (!customInstructions) {
+    return ''
+  }
+
+  const profileLines = [
+    customInstructions.name ? `- Name: ${customInstructions.name}` : null,
+    customInstructions.profession ? `- Profession: ${customInstructions.profession}` : null,
+    customInstructions.aboutUser ? `- More about the user: ${customInstructions.aboutUser}` : null,
+  ].filter((line) => line !== null)
+
+  const sections = [
+    profileLines.length > 0 ? `## User Profile\n${profileLines.join('\n')}` : null,
+    customInstructions.responseInstructions
+      ? `## Additional Instructions\n${customInstructions.responseInstructions}`
+      : null,
+  ].filter((section) => section !== null)
+
+  return sections.length > 0 ? `\n${sections.join('\n\n')}\n` : ''
+}
+
+export const chatSystemPrompt = (modelName: string, customInstructions?: CustomInstructions) => `
 You are ${modelName}, a helpful and friendly AI assistant.
 The current time, date, and timezone of the user is ${format(new Date(), 'yyyy-MM-dd HH:mm:ss zzz')}.
+${getCustomInstructionsSection(customInstructions)}
 
 ## Available Tools
 

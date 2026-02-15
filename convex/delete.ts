@@ -134,6 +134,78 @@ export const deleteAccount = authedMutation({
       await ctx.db.delete(customInstructions._id)
     }
 
-    // TODO: Delete user from database
+    const imageGenerations = await getManyFrom(ctx.db, 'imageGenerations', 'by_user_id', ctx.userId, 'userId')
+
+    for (const generation of imageGenerations) {
+      if (generation.resultStorageId) {
+        await ctx.storage.delete(generation.resultStorageId)
+      }
+      await ctx.db.delete(generation._id)
+    }
+
+    const remainingAttachments = await getManyFrom(ctx.db, 'attachments', 'by_user_id', ctx.userId, 'userId')
+
+    for (const attachment of remainingAttachments) {
+      await ctx.db.delete(attachment._id)
+      await ctx.storage.delete(attachment.id)
+    }
+
+    const userSessions = await getManyFrom(ctx.db, 'authSessions', 'userId', ctx.userId, 'userId')
+    const userSessionIds = new Set<Id<'authSessions'>>()
+
+    for (const session of userSessions) {
+      userSessionIds.add(session._id)
+
+      const refreshTokens = await getManyFrom(ctx.db, 'authRefreshTokens', 'sessionId', session._id, 'sessionId')
+      for (const refreshToken of refreshTokens) {
+        await ctx.db.delete(refreshToken._id)
+      }
+
+      await ctx.db.delete(session._id)
+    }
+
+    if (userSessionIds.size > 0) {
+      const authVerifiers = await ctx.db.query('authVerifiers').collect()
+      for (const verifier of authVerifiers) {
+        if (verifier.sessionId && userSessionIds.has(verifier.sessionId)) {
+          await ctx.db.delete(verifier._id)
+        }
+      }
+    }
+
+    const userAccounts = await ctx.db
+      .query('authAccounts')
+      .withIndex('userIdAndProvider', (q) => q.eq('userId', ctx.userId))
+      .collect()
+
+    for (const account of userAccounts) {
+      const verificationCodes = await getManyFrom(
+        ctx.db,
+        'authVerificationCodes',
+        'accountId',
+        account._id,
+        'accountId'
+      )
+
+      for (const verificationCode of verificationCodes) {
+        await ctx.db.delete(verificationCode._id)
+      }
+
+      const rateLimit = await ctx.db
+        .query('authRateLimits')
+        .withIndex('identifier', (q) => q.eq('identifier', account._id))
+        .unique()
+
+      if (rateLimit) {
+        await ctx.db.delete(rateLimit._id)
+      }
+
+      await ctx.db.delete(account._id)
+    }
+
+    const user = await ctx.db.get(ctx.userId)
+    if (user) {
+      await ctx.db.delete(user._id)
+    }
   },
 })

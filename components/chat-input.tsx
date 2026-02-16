@@ -7,7 +7,7 @@ import { useChatContext } from '@/lib/stores/chat-store'
 import { cn } from '@/lib/utils'
 import { useConvexAuth } from 'convex/react'
 import { ArrowUp, ChevronDown, Paperclip, Square } from 'lucide-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { MemoizedFilePreview } from './file-preview'
 import { Button } from './ui/button'
@@ -54,10 +54,36 @@ export function ChatInput({
   const isHydrated = useChatConfigStore((s) => s.isHydrated)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { handleFileChange, removeFile, isUploading, processFilesAndUpload } = useAttachments({
+    filesToUpload,
     filesToSend,
     setFilesToSend,
     setFilesToUpload,
   })
+
+  const handlePaste = useCallback(
+    (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const clipboardFiles = Array.from(event.clipboardData.files)
+
+      if (clipboardFiles.length === 0) {
+        return
+      }
+
+      event.preventDefault()
+
+      if (!isAuthenticated) {
+        toast.error('Please sign in to attach files')
+        return
+      }
+
+      if (!currentModel.supportsAttachment) {
+        toast.error(`${currentModel.name} does not support file attachments`)
+        return
+      }
+
+      processFilesAndUpload(clipboardFiles)
+    },
+    [currentModel, isAuthenticated, processFilesAndUpload]
+  )
 
   // Process dropped files when they arrive
   useEffect(() => {
@@ -123,6 +149,7 @@ export function ChatInput({
             e.currentTarget.form?.requestSubmit()
           }
         }}
+        onPaste={handlePaste}
         placeholder="Ask anything..."
         ref={inputRef}
         value={input}

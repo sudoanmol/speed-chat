@@ -5,7 +5,7 @@ export type ChatModelId =
   | 'anthropic/claude-opus-4.5'
   | 'openai/gpt-5.2-chat'
   | 'openai/gpt-5.2'
-  | 'z-ai/glm-4.7'
+  | 'z-ai/glm-5'
   | 'moonshotai/kimi-k2.5'
 
 export type ImageModelId = 'google/gemini-3-pro-image-preview' | 'google/gemini-2.5-flash-image'
@@ -89,15 +89,15 @@ export const AVAILABLE_MODELS: Model[] = [
   },
   {
     provider: 'z-ai',
-    id: 'z-ai/glm-4.7',
-    name: 'GLM 4.7',
+    id: 'z-ai/glm-5',
+    name: 'GLM 5',
     thinking: false,
     supportsAttachment: false,
   },
   {
     provider: 'z-ai',
-    id: 'z-ai/glm-4.7',
-    name: 'GLM 4.7 (Thinking)',
+    id: 'z-ai/glm-5',
+    name: 'GLM 5 (Thinking)',
     thinking: true,
     supportsAttachment: false,
   },

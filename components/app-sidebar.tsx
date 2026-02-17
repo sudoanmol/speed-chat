@@ -13,42 +13,27 @@ import {
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
 import { api } from '@/convex/_generated/api'
-import { getErrorMessage } from '@/lib/convex-error'
 import { useChatConfigStore } from '@/lib/stores/chat-config-store'
+import { useQueryWithStatus } from '@/lib/utils'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { VariantProps } from 'class-variance-authority'
-import { usePaginatedQuery, useQuery } from 'convex/react'
-import { ImageIcon, Loader2, LogIn, LogOut, MessageSquare, PenBox, Search, Settings } from 'lucide-react'
+import { usePaginatedQuery } from 'convex/react'
+import { ImageIcon, Loader2, LogIn, MessageSquare, PenBox, Search } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
 import { useDocumentTitle } from 'usehooks-ts'
 import { SearchDialog } from './search-dialog'
-import { SettingsDialog } from './settings-dialog'
 import { SidebarChatItem } from './sidebar-chat-item'
 import { Button, buttonVariants } from './ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu'
 import { Kbd, KbdGroup } from './ui/kbd'
 
 const PAGE_SIZE = 20
 
 export function AppSidebar() {
-  const user = useQuery(api.users.getCurrentUser)
-  const isUserLoading = user === undefined
-  const { signOut } = useAuthActions()
-  const router = useRouter()
+  const { data: user, isPending: isUserLoading } = useQueryWithStatus(api.users.getCurrentUser, {})
   const chatId = useChatConfigStore((s) => s.chatId)
   const [openSearchDialog, setOpenSearchDialog] = useState(false)
-  const [openSettingsDialog, setOpenSettingsDialog] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -94,6 +79,8 @@ export function AppSidebar() {
   const currentChat = useMemo(() => {
     return chats?.find((chat) => chat.id === chatId)
   }, [chats, chatId])
+  const profileLabel = user?.name?.trim() || user?.email?.trim() || 'Profile'
+  const profileInitial = profileLabel.charAt(0).toUpperCase()
 
   useDocumentTitle(currentChat ? `${currentChat.title} | Speed Chat` : 'Speed Chat')
 
@@ -190,40 +177,28 @@ export function AppSidebar() {
           {isUserLoading ? (
             <SidebarMenuSkeleton showIcon={true} />
           ) : user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="flex h-12 w-full items-center justify-start gap-3 rounded-lg px-2" variant="ghost">
-                  <Image src={user.image ?? ''} alt={user.name ?? ''} width={30} height={30} className="rounded-full" />
-                  <span className="truncate text-sm font-normal">{user.name}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm leading-none font-medium">{user.name}</p>
-                    <p className="text-muted-foreground text-xs leading-none">{user.email}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setOpenSettingsDialog(true)}>
-                  <Settings />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={async () => {
-                    try {
-                      await signOut()
-                      router.push('/')
-                    } catch (error) {
-                      toast.error(getErrorMessage(error))
-                    }
-                  }}
-                >
-                  <LogOut />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              asChild
+              className="flex h-12 w-full items-center justify-start gap-3 rounded-lg px-2"
+              variant="ghost"
+            >
+              <Link href="/settings">
+                <div className="bg-muted flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                  {user.image ? (
+                    <Image
+                      src={user.image}
+                      alt={`${profileLabel} profile photo`}
+                      width={32}
+                      height={32}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xs font-semibold">{profileInitial}</span>
+                  )}
+                </div>
+                <span className="truncate text-sm font-normal">{profileLabel}</span>
+              </Link>
+            </Button>
           ) : (
             <LoginButton className="flex w-full" variant="outline" size="lg" />
           )}
@@ -231,7 +206,6 @@ export function AppSidebar() {
       </Sidebar>
 
       <SearchDialog open={openSearchDialog} onOpenChange={setOpenSearchDialog} />
-      <SettingsDialog open={openSettingsDialog} onOpenChange={setOpenSettingsDialog} />
     </>
   )
 }

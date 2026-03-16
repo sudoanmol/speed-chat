@@ -6,7 +6,7 @@ A fast, full-featured AI chat app with multi-model support, real-time sync, web 
 
 - **Chat** — Switch between frontier models (GPT-5.2, Claude Opus/Sonnet, Gemini 3, and more) via OpenRouter. Chat history syncs across devices with auto-saved drafts.
 - **Image Generation** — Generate images with configurable aspect ratios and reference images using Nano Banana models.
-- **Tools** — Web search (Exa), code execution (Python 3.13 via Vercel Sandbox with optional dependency install), and interactive clarification questions when the model needs more context.
+- **Tools** — Web search (Exa), direct URL web fetch, code execution (Python 3.13 via Vercel Sandbox), and interactive clarification questions when the model needs more context.
 - **Files** — Drag-and-drop or select images and PDFs into messages.
 - **Custom Instructions** — Add personal context (name, profession, and background) plus response preferences. These are persisted in Convex and automatically appended to the system prompt on every request for a personalized experience.
 - **Organization** — Pin conversations, branch from any message, full-text search across all chats, and share with public links.

@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/lib/convex-error'
 import { useChatConfigStore } from '@/lib/stores/chat-config-store'
 import { useChatContext } from '@/lib/stores/chat-store'
 import type { CodeExecutionResult } from '@/lib/tools/code-execution'
+import { WebFetchOutputSchema } from '@/lib/tools/web-fetch-schema'
 import { UIMessageWithMetadata } from '@/lib/types'
 import type { ExaSearchResult } from '@exalabs/ai-sdk'
 import { getToolName, isToolUIPart, type FileUIPart } from 'ai'
@@ -28,6 +29,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/rea
 import { Shimmer } from './ai-elements/shimmer'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from './ai-elements/tool'
 import { InteractiveAskQuestionsTool } from './ask-questions-tool'
+import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 
@@ -132,6 +134,73 @@ function CodeExecutionResults({ output }: { output: CodeExecutionResult }) {
       {!output.stdout && !output.stderr && !output.error && (
         <div className="text-muted-foreground text-sm italic">No output</div>
       )}
+    </div>
+  )
+}
+
+const formatByteSize = (bytes: number): string => {
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function WebFetchResults({ output }: { output: unknown }) {
+  const parsedOutput = WebFetchOutputSchema.safeParse(output)
+
+  if (!parsedOutput.success) {
+    return <div className="text-muted-foreground p-4 text-sm">Unable to render web fetch output</div>
+  }
+
+  const result = parsedOutput.data
+
+  if (result.kind === 'binary') {
+    return (
+      <div className="space-y-2 p-4">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">{result.isImage ? 'Image' : 'Binary'}</Badge>
+          <span className="text-muted-foreground text-xs">
+            {result.mime} | {formatByteSize(result.contentLength)} | HTTP {result.status}
+          </span>
+        </div>
+        <p className="text-sm">{result.summary}</p>
+        <Link
+          href={result.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-500 hover:underline dark:text-blue-400"
+        >
+          {result.url}
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2 p-4">
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary">Content</Badge>
+        <span className="text-muted-foreground text-xs">
+          {result.mime} | {formatByteSize(result.contentLength)} | HTTP {result.status} | {result.format}
+        </span>
+        {result.truncated && <Badge variant="outline">Truncated</Badge>}
+      </div>
+      <Link
+        href={result.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-blue-500 hover:underline dark:text-blue-400"
+      >
+        {result.url}
+      </Link>
+      <pre className="bg-muted/50 max-h-80 overflow-auto rounded-md p-3 text-xs whitespace-pre-wrap">
+        {result.content}
+      </pre>
     </div>
   )
 }
@@ -410,6 +479,7 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
             if (isToolUIPart(part)) {
               const toolName = getToolName(part)
               const isWebSearch = part.type === 'tool-webSearch'
+              const isWebFetch = part.type === 'tool-webFetch'
               const isCodeExecution = part.type === 'tool-codeExecution'
 
               return (
@@ -420,6 +490,8 @@ function AssistantMessage({ message, isAnimating, isLastMessage }: AssistantMess
                     {part.state === 'output-available' &&
                       (isWebSearch ? (
                         <WebSearchResults output={part.output as { results: ExaSearchResult[] }} />
+                      ) : isWebFetch ? (
+                        <WebFetchResults output={part.output} />
                       ) : isCodeExecution ? (
                         <CodeExecutionResults output={part.output as CodeExecutionResult} />
                       ) : (

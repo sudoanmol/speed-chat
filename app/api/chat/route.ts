@@ -3,6 +3,7 @@ import { type Model } from '@/lib/models'
 import { chatSystemPrompt } from '@/lib/prompts'
 import { askQuestions } from '@/lib/tools/ask-questions'
 import { codeExecution } from '@/lib/tools/code-execution'
+import { webFetch } from '@/lib/tools/web-fetch'
 import { CustomInstructionsSchema, type MessageMetadata } from '@/lib/types'
 import { convexAuthNextjsToken } from '@convex-dev/auth/nextjs/server'
 import { webSearch } from '@exalabs/ai-sdk'
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
     stopWhen: stepCountIs(5),
     tools: {
       webSearch: webSearch(),
+      webFetch: webFetch(),
       codeExecution: codeExecution(),
       askQuestions: askQuestions(),
     },

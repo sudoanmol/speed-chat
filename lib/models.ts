@@ -1,10 +1,11 @@
 export type ChatModelId =
   | 'google/gemini-3-flash-preview'
   | 'google/gemini-3-pro-preview'
-  | 'anthropic/claude-sonnet-4.5'
-  | 'anthropic/claude-opus-4.5'
-  | 'openai/gpt-5.2-chat'
-  | 'openai/gpt-5.2'
+  | 'google/gemini-3.1-pro-preview'
+  | 'anthropic/claude-sonnet-4.6'
+  | 'anthropic/claude-opus-4.6'
+  | 'openai/gpt-5.3-chat'
+  | 'openai/gpt-5.4'
   | 'z-ai/glm-5'
   | 'moonshotai/kimi-k2.5'
 
@@ -45,45 +46,52 @@ export const AVAILABLE_MODELS: Model[] = [
     supportsAttachment: true,
   },
   {
-    provider: 'anthropic',
-    id: 'anthropic/claude-sonnet-4.5',
-    name: 'Claude Sonnet 4.5',
-    thinking: false,
-    supportsAttachment: true,
-  },
-  {
-    provider: 'anthropic',
-    id: 'anthropic/claude-sonnet-4.5',
-    name: 'Claude Sonnet 4.5 (Thinking)',
+    provider: 'google',
+    id: 'google/gemini-3.1-pro-preview',
+    name: 'Gemini 3.1 Pro',
     thinking: true,
     supportsAttachment: true,
   },
   {
     provider: 'anthropic',
-    id: 'anthropic/claude-opus-4.5',
-    name: 'Claude Opus 4.5',
+    id: 'anthropic/claude-sonnet-4.6',
+    name: 'Claude Sonnet 4.6',
     thinking: false,
     supportsAttachment: true,
   },
   {
     provider: 'anthropic',
-    id: 'anthropic/claude-opus-4.5',
-    name: 'Claude Opus 4.5 (Thinking)',
+    id: 'anthropic/claude-sonnet-4.6',
+    name: 'Claude Sonnet 4.6 (Thinking)',
+    thinking: true,
+    supportsAttachment: true,
+  },
+  {
+    provider: 'anthropic',
+    id: 'anthropic/claude-opus-4.6',
+    name: 'Claude Opus 4.6',
+    thinking: false,
+    supportsAttachment: true,
+  },
+  {
+    provider: 'anthropic',
+    id: 'anthropic/claude-opus-4.6',
+    name: 'Claude Opus 4.6 (Thinking)',
     thinking: true,
     supportsAttachment: true,
   },
   {
     provider: 'openai',
-    id: 'openai/gpt-5.2-chat',
-    name: 'GPT-5.2 Instant',
+    id: 'openai/gpt-5.3-chat',
+    name: 'GPT-5.3 Instant',
     thinking: false,
     default: true,
     supportsAttachment: true,
   },
   {
     provider: 'openai',
-    id: 'openai/gpt-5.2',
-    name: 'GPT-5.2 (Thinking)',
+    id: 'openai/gpt-5.4',
+    name: 'GPT-5.4', // auto reasoning, doesn't think "always"
     thinking: true,
     supportsAttachment: true,
   },
